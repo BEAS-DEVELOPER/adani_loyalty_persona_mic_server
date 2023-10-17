@@ -15,10 +15,10 @@ module.exports = (sequelize, DataTypes) => {
         created_by: {
             type: DataTypes.STRING
         },
-        update_at:{
+        updated_at:{
             type: DataTypes.DATE
         },
-        update_by:{
+        updated_by:{
             type: DataTypes.STRING
         },
         is_verified:{

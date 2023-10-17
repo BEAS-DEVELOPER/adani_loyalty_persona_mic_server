@@ -6,11 +6,11 @@ var multer = require('multer');
 
 var storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        if (file.fieldname == "panImage") {
+        if (file.fieldname == "pan_image") {
             cb(null, './uploads/verificationImages/pan');
-        } else if (file.fieldname == "frontImage") {
+        } else if (file.fieldname == "front_image") {
             cb(null, './uploads/verificationImages/aadharDLVoter/front');
-        } else if (file.fieldname == "backImage") {
+        } else if (file.fieldname == "back_image") {
             cb(null, './uploads/verificationImages/aadharDLVoter/back');
         } else {
             cb(null, './uploads/verificationImages');

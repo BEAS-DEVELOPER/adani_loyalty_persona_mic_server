@@ -42,14 +42,13 @@ async function paramsOperations(org_id, contact_id, master_name, params_value) {
         dcm_contact_id: contact_id,
         created_at: date_create
       };
-      let create_param_val = await paramsValue.create(valObj);
-      //for troubleshooting
-      // let paramsValueDetails = await paramsValue.findOne({ where: { "dcm_contact_id": contact_id, "dcm_param_master_id": masterParam_id } });
-      // if (paramsValueDetails) {
-      //   create_param_val = { "value": `${master_name} already exists.` }
-      // } else {
-      //   create_param_val = await paramsValue.create(valObj);
-      // }
+      let create_param_val = {};
+      let paramsValueDetails = await paramsValue.findOne({ where: { "dcm_contacts_id": contact_id, "dcm_param_master_id": masterParam_id } });
+      if (!paramsValueDetails) {
+        create_param_val = await paramsValue.create(valObj);
+      } else {
+        create_param_val = { "value": `${master_name} already exists.` }
+      }
       response = create_param_val.value;
     }
   }
@@ -164,7 +163,13 @@ registrationController.basicProfileRegistration = async (req, res) => {
         dcm_cities_id: req.body.district,
         created_at: date_create
       };
-      let profileObj = await basicProfile.create(basicProfileObj);
+      let profileObj = {}
+      let basicDetails = await basicProfile.findOne({ where: { "dcm_contacts_id": contact_id } });
+      if (!basicDetails) {
+        profileObj = await basicProfile.create(basicProfileObj);
+      } else {
+        profileObj = basicDetails;
+      }
       let dealerDetails = await tempContactRegistration.findOne({ where: { id: contact_id } });
       if (dealerDetails) {
         let responseObj = {};
@@ -210,12 +215,12 @@ registrationController.basicProfileRegistration = async (req, res) => {
       commonResObj(res, 200, { "message": "DCM Contacts not found" });
     }
   } catch (error) {
-    console.log(error)
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.basicProfileRegistration", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error })
   }
 }
-
+//add validation
+//add updatedby, createdby foreign keys
 registrationController.addProfileRegistration = async (req, res) => {
   try {
     const org_id = req.body.org_id;
@@ -241,10 +246,10 @@ registrationController.addProfileRegistration = async (req, res) => {
     let pan = "";
     let grpInfoDetails = await dcm_groupMembersInfo.findOne({ where: { "dcm_contacts_id": contact_id, "dcm_group_members_id": grpMemberId } })
     if (!grpInfoDetails) {
-      await dcm_groupMembersInfo.create(infoObj);
-      pan = "PAN already exists"
+      let panDetails = await dcm_groupMembersInfo.create(infoObj);
+      pan = panDetails.value;
     } else {
-      pan = grpInfoDetails.value
+      pan = "PAN already exists"
     }
     let m_status = await paramsOperations(org_id, contact_id, "Marital Status", value_m_status);
     let sp_name = "";
@@ -303,7 +308,7 @@ registrationController.addProfileRegistration = async (req, res) => {
         fileObject.created_at = date_create;
         fileObject.file_path = frontImgPath;
         fileObject.group_name = "identityDocumentType"
-        fileObject.sub_group_name = "aadhar"
+        fileObject.sub_group_name = "aadharFront"
         fileObject.custom1 = grpId
         fileObject.custom2 = grpAadharId
         userFile.create(fileObject);
@@ -317,7 +322,7 @@ registrationController.addProfileRegistration = async (req, res) => {
         fileObject.created_at = date_create;
         fileObject.file_path = backImgPath;
         fileObject.group_name = "identityDocumentType"
-        fileObject.sub_group_name = "aadhar"
+        fileObject.sub_group_name = "aadharBack"
         fileObject.custom1 = grpId
         fileObject.custom2 = grpAadharId
         userFile.create(fileObject);
@@ -325,6 +330,7 @@ registrationController.addProfileRegistration = async (req, res) => {
     }
     commonResObj(res, 200, { additionalProfileDetails: responseObj });
   } catch (error) {
+    console.log(error)
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.addProfileRegistration", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error });
   }
