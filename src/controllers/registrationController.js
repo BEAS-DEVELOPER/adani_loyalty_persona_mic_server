@@ -59,8 +59,6 @@ registrationController.tempRegistration = async (req, res) => {
   try {
 
     let date_create = new Date().toISOString();
-    //  const role = req.body.role;
-    // let  = await tempContactRegistration.findOne({ where: { id: req.body.organization_Id } });
 
     //========================================> TO BE STORED IN dcm_contacts
     let tempRegContactsObj = {
@@ -70,7 +68,8 @@ registrationController.tempRegistration = async (req, res) => {
       gender: (req.body.gender) ? req.body.gender : '',
       date_of_birth: (req.body.date_of_birth) ? req.body.gender : '',
       created_at: date_create,
-      dcm_organization_id: req.body.organization_Id
+      dcm_organization_id: req.body.organization_Id,
+      dcm_hierarchies_id : (req.body.hierarchies_id)?req.body.hierarchies_id:''
     };
     let responseObjContact = await tempContactRegistration.create(tempRegContactsObj);
 

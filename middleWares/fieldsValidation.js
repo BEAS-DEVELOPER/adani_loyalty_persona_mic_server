@@ -1,12 +1,21 @@
 
 const joi = require('joi');
 const commonResObj = require('../middleWares/responses/commonResponse')
+const hirarchyIds      =   require('../config/dcm_hierarchyIds')
 
-const FildsValidation=(role, apiFor , res)=>{
+
+const FildsValidation=(req , res , apiFor)=>{
     let fields={};
     switch(apiFor){
         case "temporaryRegister": // API FOR => getting from url (which api is calling)
-                    switch(role){
+                    let roleName = ''
+                    hirarchyIds.forEach(role=>{
+                        if(role.id == req.body.hierarchies_id){
+                            roleName =  role.name
+                        }
+                    })
+                    
+                    switch(roleName){
                         case "Dealer": //================================= FOR USER ROLE DEALER
                                 fields = {
                                     first_name     : joi.string().max(50).required(),
@@ -17,6 +26,7 @@ const FildsValidation=(role, apiFor , res)=>{
                                     email_address  : joi.string().allow(null),
                                     gender         : joi.string().valid("M","F"),
                                     role           : joi.string().required(),
+                                    hierarchies_id : joi.string().required(),
                                     identity_number : joi.string().required(),
                                     identity_number_type  : joi.string().valid('aadharcard','voterId','driving_license').required(),
                                     marital_status : joi.string().valid('Married','Single').required(), /// will applied on addition aprfile
@@ -35,6 +45,7 @@ const FildsValidation=(role, apiFor , res)=>{
                                     email_address  : joi.string().allow(null),
                                     gender         : joi.string().valid("M","F"),
                                     role           : joi.string().required(),
+                                    hierarchies_id : joi.string().required(),
                                     identity_number : joi.string().required(),
                                     identity_number_type  : joi.string().valid('aadharcard','voterId','driving_license').required(),
                                     marital_status : joi.string().valid('Married','Single').required(), /// will applied on addition aprfile
@@ -53,6 +64,7 @@ const FildsValidation=(role, apiFor , res)=>{
                                     email_address  : joi.string().allow(null),
                                     gender         : joi.string().valid("M","F"),
                                     role           : joi.string().required(),
+                                    hierarchies_id : joi.string().required(),
                                     identity_number : joi.string().required(),
                                     identity_number_type  : joi.string().valid('aadharcard','voterId','driving_license').required(),
                                     marital_status : joi.string().valid('Married','Single').required(), /// will applied on addition aprfile
@@ -71,6 +83,7 @@ const FildsValidation=(role, apiFor , res)=>{
                                     email_address  : joi.string().allow(null),
                                     gender         : joi.string().valid("M","F"),
                                     role           : joi.string().required(),
+                                    hierarchies_id : joi.string().required(),
                                     identity_number : joi.string().required(),
                                     identity_number_type  : joi.string().valid('aadharcard','voterId','driving_license').required(),
                                     marital_status : joi.string().valid('Married','Single').required(), /// will applied on addition aprfile
@@ -89,6 +102,7 @@ const FildsValidation=(role, apiFor , res)=>{
                                     email_address  : joi.string().allow(null),
                                     gender         : joi.string().valid("M","F"),
                                     role           : joi.string().required(),
+                                    hierarchies_id : joi.string().required(),
                                     identity_number : joi.string().required(),
                                     identity_number_type  : joi.string().valid('aadharcard','voterId','driving_license').required(),
                                     marital_status : joi.string().valid('Married','Single').required(), /// will applied on addition aprfile
@@ -107,6 +121,7 @@ const FildsValidation=(role, apiFor , res)=>{
                                     email_address  : joi.string().allow(null),
                                     gender         : joi.string().valid("M","F"),
                                     role           : joi.string().required(),
+                                    hierarchies_id : joi.string().required(),
                                     identity_number : joi.string().required(),
                                     identity_number_type  : joi.string().valid('aadharcard','voterId','driving_license').required(),
                                     marital_status : joi.string().valid('Married','Single').required(), /// will applied on addition aprfile
