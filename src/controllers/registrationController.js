@@ -219,8 +219,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
     commonResObj(res, 500, { error: error })
   }
 }
-//add validation
-//add updatedby, createdby foreign keys
+
 registrationController.addProfileRegistration = async (req, res) => {
   try {
     const org_id = req.body.org_id;
