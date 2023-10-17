@@ -1,0 +1,328 @@
+openapi: "3.0.0"
+
+servers:
+  - url: 'http://localhost:8000/api/v1/adminservice'
+    description: adminservice [LOCAL]
+
+info:
+  title: adminservice
+  description: FLAMINGO ADMIN SERVICE API DOCUMENTATION
+  version: '1.0'
+  contact:
+    email: ashrafjamal5997@gmail.com 
+
+paths:
+## SEARCH PRODUCT
+  /search/product:
+    post:
+      summary: to search product.
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: product 
+          description: The product to search.
+          schema:
+            type: object
+      responses:
+        201:
+          description: SEARCH
+## DELETE PRODUCT 
+  /delete/product/{id}:
+     delete:
+      summary: delete product by id.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+         description: OK
+
+## UPDATE PRODUCT
+  /update/product/{id}:
+    put:
+      summary: to update product ctgry.
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: product ctgry
+          description: The product ctgry to add.
+          schema:
+            type: object
+      responses:
+        201:
+          description: Add
+## GET PRODUCT BY ID
+  /get/product/by/pId/{id}:
+     delete:
+      summary: get product by id.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+         description: OK
+## GET PRODUCT LIST
+  /get/product/list/:
+    get:
+     summary: Returna all product list 
+     description: OK
+     responses:
+       '200':
+         description: OK
+## ADD PRODUCT 
+  /add/product:
+    post:
+      summary: add a new product.
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: product
+          description: The product to add.
+          schema:
+            type: object
+      responses:
+        201:
+          description: Add
+
+## DELETE PRODUCT 
+  /delete/prodCtrgy{id}:
+     delete:
+      summary: delete product by id.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+         description: OK
+## UPDATE PRODUCT
+  /update/prodCtrgy/{id}:
+    put:
+      summary: to update product ctgry.
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: product ctgry
+          description: The product ctgry to add.
+          schema:
+            type: object
+      responses:
+        201:
+          description: Add
+## GET PRODUCT CTRGY BY ID
+  /get/prodCtrgy/by/pcId/{id}:
+     get:
+      summary: Returns pproduct ctgry by id.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+         description: OK
+## GET ALL PRODUCT CTGRY LIST
+  /get/prodCtrgy/list/:
+    get:
+     summary: Returna all product ctgry list 
+     description: OK
+     responses:
+       '200':
+         description: OK
+## ADD PRODUCT CTGRY
+  /add/prodCtrgy:
+    post:
+      summary: add a new product ctgry.
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: product
+          description: The product ctgry to add.
+          schema:
+            type: object
+             
+      responses:
+        201:
+          description: Add
+
+## GET USER BY ID
+  /get/user/{id}:
+     get:
+      summary: Returns user by id.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+         description: OK
+
+## GET USERS BY LIMIT AND PAGE 
+  /get/users:
+     get:
+      summary: Returns  users by limit and page.
+      parameters:
+        - name: limit
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+        - name: page
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+         description: OK
+
+## DELETE USER BY ID
+  /delete/user/{id}:
+     delete:
+      summary: delete user by id.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+         description: OK
+
+## DELETE ROLE BY RPID
+  /delete/role/{rpId}:
+     delete:
+      summary: delete role by rpId.
+      parameters:
+        - name: rpId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+         description: OK
+
+## GET ROLE BY USER ID 
+  /get/role/by/userId/{userId}:
+    get:
+      summary: get role by userId.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+         description: OK
+## ADD USER
+  /add/user:
+    post:
+      summary: add a new user.
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: user
+          description: The user to add.
+          schema:
+            type: object
+             
+      responses:
+        201:
+          description: Add
+
+## SEARCH USER 
+  /search/user:
+    post:
+      summary: to search user.
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: user
+          description: The user to add.
+          schema:
+            type: object
+             
+      responses:
+        201:
+          description: Add
+# UPDATE USER
+  /update/user:
+    put:
+      summary: to update user.
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: user
+          description: The user to add.
+          schema:
+            type: object
+             
+      responses:
+        201:
+          description: Add
+#ADD ROLE BY USERID
+  /add/role/{userId}:
+    post:
+      summary: to update user.
+      consumes:
+        - application/json
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      parameters:
+        - in: body
+          name: user
+          description: The user to add.
+          schema:
+            type: object
+             
+      responses:
+        201:
+          description: Add

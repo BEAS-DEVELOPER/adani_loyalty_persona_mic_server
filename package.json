@@ -1,0 +1,37 @@
+{
+  "name": "microservice_9001",
+  "version": "1.0.0",
+  "description": "Api for adani project backend management ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "author": "Soumya",
+  "license": "ISC",
+  "dependencies": {
+    "@opentelemetry/api": "^1.6.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.39.2",
+    "@opentelemetry/sdk-node": "^0.43.0",
+    "axios": "^1.2.5",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
+    "dotenv": "^9.0.2",
+    "ejs": "^3.1.6",
+    "express": "^4.17.1",
+    "joi": "^17.4.0",
+    "jsonwebtoken": "^8.5.1",
+    "multer": "^1.4.2",
+    "mysql2": "^3.6.1",
+    "sequelize": "^6.33.0",
+    "swagger-jsdoc": "^6.2.1",
+    "swagger-ui-express": "^4.5.0",
+    "winston": "^3.8.1",
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}

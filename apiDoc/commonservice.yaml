@@ -1,0 +1,178 @@
+openapi: "3.0.0"
+
+servers:
+  - url: 'http://localhost:8000/api/v1/commonservice'
+    description: commonservice [LOCAL]
+
+info:
+  title: commonservice
+  description: FLAMINGO COMMON SERVICE API DOCUMENTATION
+  version: '1.0'
+  contact:
+    email: ashrafjamal5997@gmail.com 
+
+paths:
+  /register:
+    post:
+      summary: Creates a new user.
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: user
+          description: The user to create.
+          schema:
+            type: object
+            required:
+              - userName
+            properties:
+              username:
+                type: string
+              usercontact:
+                type: string
+              password :
+                type: string
+              isdeleted:
+                type: string
+              accesstype:
+                type: string
+              createdon:
+                type: string
+              createdby:
+                type: string
+              lastModifiedBy:
+                type: string
+              lastModifiedOn:
+                type: string
+      responses:
+        201:
+          description: Created 
+
+  /login:
+    post:
+      summary: login user.
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: user
+          description: The user to login.
+          schema:
+            type: object
+            required:
+              - userName
+            properties:
+              password:
+                type: string
+              usercontact:
+                type: string
+      responses:
+        201:
+          description: login
+
+##  GET ALL TILE LIST
+  /get/tile/list:
+    get:
+     summary: Returna all tile list 
+     description: OK
+     responses:
+       '200':
+         description: OK
+
+
+##  GET ALL MODULE LIST BY USERID 
+  /get/module/list/by/userId/{userId}:
+      get:
+      summary: Returns modules list  by userId.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+         description: OK
+
+##  GET ALL TILE LIST BY USERID 
+  /get/tile/list/by/userId/{userId}:
+     get:
+      summary: Returns roles by tile id.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+         description: OK
+
+##  GET ALL MODULE  LIST
+  /get/module/list:
+    get:
+     summary: Returna all module list
+     description: OK
+     responses:
+       '200':
+         description: OK
+
+  ## GET ROLE LIST BY TILE ID
+  /get/role/by/tileId/{tileId}:
+    get:
+      summary: Returns roles by tile id.
+      parameters:
+        - name: tileId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+         description: OK
+
+  ## GET TILE LIST BY USER ID MODULE ID
+  /get/tile/by/moduleId/and/userId:
+    get:
+      summary: Returns tiles by moduleId id and userId.
+      parameters:
+        - name: moduleId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+         description: OK
+
+  ## GET TILE LIST BY  MODULE ID
+  /get/tile/by/moduleId/{moduleId}:
+    get:
+      summary: Returns tiles by moduleId id.
+      parameters:
+        - name: moduleId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+         description: OK         
+         
