@@ -2,6 +2,7 @@ const commonResObj = require('../responses/commonResponse')
 const logger          = require('../../supports/logger')
 const JwtService  =   require('../../services/JwtService');
 const mandatoryFields  =   require('../fieldsValidation');
+const hirarchyIds      =   require('../../config/dcm_hierarchyIds')
 
 var path = require('path');
 var filename = path.basename(__dirname)+"/"+path.basename(__filename);
@@ -12,6 +13,7 @@ const  ApiErrors= {
     checkBody:{},
     checkError:{},
     checkUserRole:{},
+    checkUserHierarchy:{},
 
 }
 
@@ -38,9 +40,9 @@ ApiErrors.checkBody = (req,res)=>{
 
 ApiErrors.checkUserRole  = ( req , res )=>{
     let isRoleExist = false;
-    let roles = ["Dealer", "Retailer", "Influencer", "Sales Force", "Contractor", "Engineer"]
+    let roles = hirarchyIds
     roles.forEach(role=>{
-        if(role == req.body.role){
+        if(role.name == req.body.role){
             isRoleExist =true
         }
     })
@@ -48,10 +50,25 @@ ApiErrors.checkUserRole  = ( req , res )=>{
         return isRoleExist
     }else{
         logger.log({ level: "info", message: { fileLocation: "Middlewares/"+filename+" ,ApiErrors.checkUserRole", method:req.method, validationErrors: `role ${req.body.role} is not exist , please provide valid role`, Api :registrationProfileNode_serviceUrl+req.url ,status:412} });
-        commonResObj(res,412,{validationErrors:{role:`role ${req.body.role}is not exist , please provide valid role`}})
+        commonResObj(res,412,{validationErrors:{role:`role ${req.body.role} is not exist , please provide valid role`}})
     }
-
 }
+ApiErrors.checkUserHierarchy  = ( req , res )=>{
+    let isRoleExist = false;
+    let roles = hirarchyIds
+    roles.forEach(role=>{
+        if(role.id == req.body.hierarchies_id){
+            isRoleExist =true
+        }
+    })
+    if(isRoleExist){
+        return isRoleExist
+    }else{
+        logger.log({ level: "info", message: { fileLocation: "Middlewares/"+filename+" ,ApiErrors.checkUserRole", method:req.method, validationErrors: `role ${req.body.role} is not exist , please provide valid role`, Api :registrationProfileNode_serviceUrl+req.url ,status:412} });
+        commonResObj(res,412,{validationErrors:{hierarchies_id:`hierarchies_id ${req.body.hierarchies_id} is not exist , please provide valid hierarchies_id`}})
+    }
+}
+
 
 
 

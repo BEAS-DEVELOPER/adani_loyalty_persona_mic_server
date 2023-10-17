@@ -7,7 +7,7 @@ const registerSchema={
 }
 
 registerSchema._tempRegSchema =  async(req, res , next) =>{
-   let fields =  await  fieldsValidation(req.body.role,"temporaryRegister", res)
+   let fields =  await  fieldsValidation(req , res, "temporaryRegister")
    return joi.object(fields).validate(req.body, { abortEarly: false })
 }
 
