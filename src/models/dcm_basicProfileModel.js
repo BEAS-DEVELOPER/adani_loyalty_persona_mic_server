@@ -76,10 +76,18 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: null
         },
         dcm_organization_id: {
-            type: DataTypes.INTEGER
+            type: DataTypes.INTEGER,
+            references: {
+                model: 'dcm_organization', 
+                key: 'id'
+             }
         },
         dcm_companies_id: {
-            type: DataTypes.INTEGER
+            type: DataTypes.INTEGER,
+            references: {
+                model: 'dcm_companies', 
+                key: 'id'
+             }
         },
         edit_lock: {
             type: DataTypes.ENUM,

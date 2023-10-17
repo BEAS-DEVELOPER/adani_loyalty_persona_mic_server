@@ -37,6 +37,7 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.DATE
         }
     }, {
+        freezeTableName: true,
         timestamps: false
     });
     return paramMaster;

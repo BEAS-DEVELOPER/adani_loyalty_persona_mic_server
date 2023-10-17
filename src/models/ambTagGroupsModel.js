@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-    const paramGroups = sequelize.define('dcm_param_groups', {
+    let ambTagGroupModel = sequelize.define('amb_tag_groups', {
         id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
@@ -8,21 +8,21 @@ module.exports = (sequelize, DataTypes) => {
         name: {
             type: DataTypes.STRING
         },
-        dcm_organization_id: {
-            type: DataTypes.INTEGER,
-            references: {
-                model: 'dcm_organization', 
-                key: 'id'
-            }
+        description: {
+            type: DataTypes.STRING
+        },
+        created_by: {
+            type: DataTypes.INTEGER
         },
         created_at: {
             type: DataTypes.DATE
         },
-        modified_at: {
-            type: DataTypes.DATE
+        is_active: {
+            type: DataTypes.ENUM,
+            values: ['0', '1', '2']
         }
     }, {
         timestamps: false
     });
-    return paramGroups;
+    return ambTagGroupModel;
 }

@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-    let masterContractModel = sequelize.define('ambuja_contractor_category_masters', {
+    let masterContractModel = sequelize.define('ambuja_contractor_category_master', {
         id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
@@ -25,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER
         }
     }, {
+        freezeTableName: true,
         timestamps: false
     });
     return masterContractModel;

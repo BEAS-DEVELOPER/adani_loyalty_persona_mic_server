@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
         dcm_param_master_id: {
             type: DataTypes.INTEGER,
             references: {
-                model: 'dcm_param_masters', 
+                model: 'dcm_param_master', 
                 key: 'id'
             }
         },

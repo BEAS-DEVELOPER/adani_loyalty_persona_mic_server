@@ -1,27 +1,30 @@
 module.exports = (sequelize, DataTypes) => {
-    let mapContractModel = sequelize.define('ambuja_contractor_category_mapping', {
+    let ambContactTagMapModel = sequelize.define('amb_contact_tag_mapping', {
         id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
             primaryKey: true
         },
-        contact_id: {
+        dcm_contact_id: {
             type: DataTypes.INTEGER,
             references: {
                 model: 'dcm_contacts',
                 key: 'id'
             }
         },
-        ambuja_contractor_category_master_id: {
+        amb_tags_id: {
             type: DataTypes.INTEGER,
             references: {
-                model: 'ambuja_contractor_category_master',
+                model: 'amb_tags',
                 key: 'id'
             }
+        },
+        is_active: {
+            type: DataTypes.INTEGER
         }
     }, {
         freezeTableName: true,
         timestamps: false
     });
-    return mapContractModel;
+    return ambContactTagMapModel;
 }

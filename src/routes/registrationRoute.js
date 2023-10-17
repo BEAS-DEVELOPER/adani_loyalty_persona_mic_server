@@ -1,9 +1,30 @@
 const express = require('express');
-const router  = express.Router(); 
-const registrationController   = require('../controllers/registrationController');
+const router = express.Router();
+const registrationController = require('../controllers/registrationController');
 const regValidtn = require('../validations/registerValidation');
+var multer = require('multer');
 
-router.post('/temporaryRegister',regValidtn._tempRegist, registrationController.tempRegistration) // AS OF NOW TEMPORARY REGISTRATIONS 
-router.post('/basic/profile',registrationController.basicProfileRegistration);
+var storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        if (file.fieldname == "panImage") {
+            cb(null, './uploads/verificationImages/pan');
+        } else if (file.fieldname == "frontImage") {
+            cb(null, './uploads/verificationImages/aadharDLVoter/front');
+        } else if (file.fieldname == "backImage") {
+            cb(null, './uploads/verificationImages/aadharDLVoter/back');
+        } else {
+            cb(null, './uploads/verificationImages');
+        }
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + file.originalname);
+    }
+});
+
+var uploads = multer({ storage: storage });
+
+router.post('/temporaryRegister', regValidtn._tempRegist, registrationController.tempRegistration) // AS OF NOW TEMPORARY REGISTRATIONS 
+router.post('/basic/profile', registrationController.basicProfileRegistration);
+router.post('/additional/profile', uploads.fields([{ name: 'pan_image', maxCount: 1 }, { name: 'front_image', maxCount: 1 }, { name: 'back_image', maxCount: 1 }]), registrationController.addProfileRegistration);
 
 module.exports = router;

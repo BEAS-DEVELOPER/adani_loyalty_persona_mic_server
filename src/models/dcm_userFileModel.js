@@ -1,5 +1,3 @@
-const { DataTypes } = require("sequelize")
-
 module.exports=(sequelize,DataTypes)=>{
     const userFiles=sequelize.define('dcm_user_files',{
         id:{
