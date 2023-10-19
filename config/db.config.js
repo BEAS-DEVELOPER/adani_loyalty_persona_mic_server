@@ -57,12 +57,13 @@ let db = {}
 db.Sequelize = Sequelize
 db.sequelize = sequelize
 
+db.organization = require('../src/models/dcm_organizationModel')(sequelize, DataTypes)
+db.dcm_hierarchies = require('../src/models/dcm_hierarchiesModel')(sequelize, DataTypes)
 db.tempContactRegistration = require('../src/models/dcm_registrationContactModel')(sequelize, DataTypes)
 db.tempPhoneRegistration = require('../src/models/registrationPhoneModel')(sequelize, DataTypes)
 db.tempEmailRegistration = require('../src/models/dcm_registrationEmailModel')(sequelize, DataTypes)
 db.basicProfile = require('../src/models/dcm_basicProfileModel')(sequelize, DataTypes)
 db.parentChildMapping = require('../src/models/dcm_contactParentChildMapping')(sequelize, DataTypes)
-db.organization = require('../src/models/dcm_organizationModel')(sequelize, DataTypes)
 db.paramsGroup = require('../src/models/dcm_paramsGroupModel')(sequelize, DataTypes)
 db.paramsMaster = require('../src/models/dcm_paramsMasterModel')(sequelize, DataTypes)
 db.paramsValue = require('../src/models/dcm_paramsValueModel')(sequelize, DataTypes)
@@ -76,8 +77,11 @@ db.ambContactTagMap = require('../src/models/ambContactTagMapModel')(sequelize, 
 db.dcm_groups = require('../src/models/dcm_groupsModel')(sequelize, DataTypes)
 db.dcm_groupMembers = require('../src/models/dcm_groupMembersModel')(sequelize, DataTypes)
 db.dcm_groupMembersInfo = require('../src/models/dcm_groupMembersInfoModel')(sequelize, DataTypes)
+db.dcm_salesData = require('../src/models/dcm_salesDataModel')(sequelize, DataTypes)
+db.ambPanDeclarationLog=require('../src/models/ambPanDeclarationLog')(sequelize, DataTypes)
 
 
+db.dcm_hierarchies.hasMany(db.organization, { foreignKey: "id" })
 db.tempContactRegistration.hasOne(db.basicProfile, { foreignKey: "dcm_contacts_id" })
 db.basicProfile.hasMany(db.organization, { foreignKey: "id" })
 db.basicProfile.hasMany(db.companies, { foreignKey: "id" })
@@ -93,7 +97,7 @@ db.ambContactTagMap.hasOne(db.tempContactRegistration, { foreignKey: "id" })
 db.dcm_groupMembers.hasMany(db.dcm_groups, { foreignKey: "id" })
 db.dcm_groupMembersInfo.hasMany(db.dcm_groupMembers, { foreignKey: "id" })
 db.dcm_groupMembersInfo.hasOne(db.tempContactRegistration, { foreignKey: "id" })
-
+db.dcm_salesData.hasOne(db.tempContactRegistration, { foreignKey: "id" })
 
 
 db.sequelize.sync({ force: false })

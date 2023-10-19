@@ -6,7 +6,7 @@ const groupMembersIds = require('../../config/dcm_groupMemberIds')
 // const refreshJwtService = require('../../../services/refreshJwtService')
 // const bcrypt = require('bcryptjs');
 const { basicProfile, tempContactRegistration, tempPhoneRegistration, tempEmailRegistration, parentChildMapping, organization, paramsMaster,
-  paramsValue, companies, ambContactTagMap, userFile, dcm_groups, dcm_groupMembers, dcm_groupMembersInfo } = require('../../config/db.config')
+  paramsValue, companies, ambContactTagMap, userFile, dcm_groups, dcm_groupMembers, dcm_groupMembersInfo, dcm_hierarchies, dcm_salesData, ambPanDeclarationLog } = require('../../config/db.config')
 
 require("dotenv").config();
 const logger = require('../../supports/logger')
@@ -24,7 +24,8 @@ const registrationController = {
 
   tempRegistration: {},
   basicProfileRegistration: {},
-  addProfileRegistration: {}
+  addProfileRegistration: {},
+  saleRegistration: {}
 
 }
 
@@ -46,8 +47,6 @@ async function paramsOperations(org_id, contact_id, master_name, params_value) {
       let paramsValueDetails = await paramsValue.findOne({ where: { "dcm_contacts_id": contact_id, "dcm_param_master_id": masterParam_id } });
       if (!paramsValueDetails) {
         create_param_val = await paramsValue.create(valObj);
-      } else {
-        create_param_val = { "value": `${master_name} already exists.` }
       }
       response = create_param_val.value;
     }
@@ -69,7 +68,7 @@ registrationController.tempRegistration = async (req, res) => {
       date_of_birth: (req.body.date_of_birth) ? req.body.gender : '',
       created_at: date_create,
       dcm_organization_id: req.body.organization_Id,
-      dcm_hierarchies_id : (req.body.hierarchies_id)?req.body.hierarchies_id:''
+      dcm_hierarchies_id: (req.body.hierarchies_id) ? req.body.hierarchies_id : ''
     };
     let responseObjContact = await tempContactRegistration.create(tempRegContactsObj);
 
@@ -141,26 +140,55 @@ registrationController.tempRegistration = async (req, res) => {
   }
 }
 
-
 registrationController.basicProfileRegistration = async (req, res) => {
   try {
     let date_create = new Date().toISOString();
-    const org_id = req.body.org_id;
-    const hierarchies_id = req.body.hierarchies_id;
-    const contact_id = req.body.contact_id;
-    let valueName = req.body.active_sites;
+    const tso_id = req.body.tso_id ? req.body.tso_id : '';
+    const org_id = req.body.org_id ? req.body.org_id : null;
+    const hierarchies_id = req.body.hierarchies_id ? req.body.hierarchies_id : null;
+    const contact_id = req.body.contact_id ? req.body.contact_id : null;
+    const valueName = req.body.active_sites ? req.body.active_sites : '';
+    const company_id = req.body.company_id ? req.body.company_id : null
+    const group_members_id = req.body.dcm_group_members_id ? req.body.dcm_group_members_id : null
+    const recipient = req.body.recipient ? req.body.recipient : '';
+    const is_default = req.body.is_default ? req.body.is_default : '0';
+    const country = req.body.country_id ? req.body.country_id : null;
+    const address = req.body.address ? req.body.address : '';
+    const post_office = req.body.post_office ? req.body.post_office : '';
+    const landmark = req.body.landmark ? req.body.landmark : '';
+    const city = req.body.city ? req.body.city : '';
+    const pin_code = req.body.pin_code ? req.body.pin_code : '';
+    const state = req.body.state_id ? req.body.state_id : null;
+    const district = req.body.district_id ? req.body.district_id : null;
+    const address_change_type = req.body.address_change_type ? req.body.address_change_type : '0';
+    const address_status = req.body.address_status ? req.body.address_status : '0';
+    const is_active = req.body.is_active ? req.body.is_active : '1';
+    const edit_lock = req.body.edit_lock ? req.body.edit_lock : '0';
+    const taluka = req.body.taluka_id ? req.body.taluka_id : null;
     let contactDetails = await tempContactRegistration.findOne({ where: { id: contact_id } });
     if (contactDetails) {
       let basicProfileObj = {
         dcm_contacts_id: contact_id,
-        line1: req.body.address,
-        line2: req.body.post_office,
-        line3: req.body.landmark,
-        city: req.body.city,
-        post_code: req.body.pin_code,
-        dcm_states_id: req.body.state,
-        dcm_cities_id: req.body.district,
-        created_at: date_create
+        recipient: recipient,
+        is_default: is_default,
+        line1: address,
+        line2: post_office,
+        line3: landmark,
+        city: city,
+        dcm_group_members_id: group_members_id,
+        post_code: pin_code,
+        dcm_states_id: state,
+        dcm_cities_id: district,
+        dcm_countries_id: country,
+        address_change_type: address_change_type,
+        address_status: address_status,
+        is_active: is_active,
+        created_at: date_create,
+        dcm_organization_id: org_id,
+        dcm_companies_id: company_id,
+        is_verified: '0',
+        edit_lock: edit_lock,
+        dcm_taluka_id: taluka
       };
       let profileObj = {}
       let basicDetails = await basicProfile.findOne({ where: { "dcm_contacts_id": contact_id } });
@@ -171,9 +199,18 @@ registrationController.basicProfileRegistration = async (req, res) => {
       }
       let dealerDetails = await tempContactRegistration.findOne({ where: { id: contact_id } });
       if (dealerDetails) {
+        let no_activeSites = await paramsOperations(org_id, contact_id, "Active Sites", valueName);
+        let contractDetails = await ambContactTagMap.findOne({ where: { "dcm_contact_id": contact_id } });
+        let tagsId = contractDetails.amb_tags_id;
+        let mappingOfficer = "";
         let responseObj = {};
-        if (hierarchies_id != 32) {
+        let hierarchyDetails = await dcm_hierarchies.findOne({ where: { "id": hierarchies_id, "dcm_organization_id": org_id } });
+        if (hierarchyDetails.name == "Dealer") {
+          mappingOfficer = tso_id;
           responseObj = {
+            "mappingOfficer": mappingOfficer,
+            "contractorCategory": tagsId,
+            "noOfActiveSites": no_activeSites,
             "addressLine1": profileObj.line1,
             "postOffice": profileObj.line2,
             "landmark": profileObj.line3,
@@ -182,7 +219,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
             "district": profileObj.dcm_cities_id,
             "pinCode": profileObj.post_code
           };
-        } else {
+        } else if (hierarchyDetails.name == "TSO") {
           let dealerArr = [];
           let mappingDetails = await parentChildMapping.findAll({ where: { "contractor_id": contact_id } });
           if (mappingDetails.length > 0) {
@@ -205,6 +242,8 @@ registrationController.basicProfileRegistration = async (req, res) => {
               "pinCode": profileObj.post_code
             }
           }
+        } else {
+
         }
         commonResObj(res, 200, { basicProfileDetails: responseObj });
       } else {
@@ -221,14 +260,15 @@ registrationController.basicProfileRegistration = async (req, res) => {
 
 registrationController.addProfileRegistration = async (req, res) => {
   try {
-    const org_id = req.body.org_id;
-    const contact_id = req.body.contact_id;
-    const value_pan = req.body.pan;
-    const value_m_status = req.body.marital_status;
-    const value_sp_name = req.body.spouse_name;
+    const org_id = req.body.org_id ? req.body.org_id : null;
+    const contact_id = req.body.contact_id ? req.body.contact_id : null;
+    const value_pan = req.body.pan ? req.body.pan : '';
+    const value_m_status = req.body.marital_status ? req.body.marital_status : '';
+    const value_sp_name = req.body.spouse_name ? req.body.spouse_name : '';
+    const is_verified = req.body.is_verified ? req.body.is_verified : '0'
     let date_create = new Date().toISOString();
-    const value_sp_brthday = req.body.spouse_birthday;
-    const value_m_anniv = req.body.marraige_anniversary;
+    const value_sp_brthday = req.body.spouse_birthday ? req.body.spouse_birthday : '';
+    const value_m_anniv = req.body.marraige_anniversary ? req.body.marraige_anniversary : '';
     let grpDetails = await dcm_groups.findOne({ where: { "name": "identityDocumentType" } });
     let grpId = grpDetails.id;
     let grpMemberDetails = await dcm_groupMembers.findOne({ where: { "master_groups_id": grpId, "name": "PAN" } });
@@ -239,7 +279,8 @@ registrationController.addProfileRegistration = async (req, res) => {
       dcm_group_members_id: grpMemberId,
       created_at: date_create,
       is_verified: '1',
-      created_by: contact_id
+      created_by: contact_id,
+      is_verified: is_verified
     }
     let pan = "";
     let grpInfoDetails = await dcm_groupMembersInfo.findOne({ where: { "dcm_contacts_id": contact_id, "dcm_group_members_id": grpMemberId } })
@@ -247,7 +288,7 @@ registrationController.addProfileRegistration = async (req, res) => {
       let panDetails = await dcm_groupMembersInfo.create(infoObj);
       pan = panDetails.value;
     } else {
-      pan = "PAN already exists"
+      pan = grpInfoDetails.value;
     }
     let m_status = await paramsOperations(org_id, contact_id, "Marital Status", value_m_status);
     let sp_name = "";
@@ -268,13 +309,27 @@ registrationController.addProfileRegistration = async (req, res) => {
       "voterDlAadharFrontImage": "",
       "voterDlAadharBackImage": ""
     }
+    let panDeclarationObj = {
+      dcm_contact_id: contact_id,
+      dcm_order_id: 0,
+      declaration_type: "O",
+      declare_no_pan: "0",
+      created_at: date_create
+    }
+    if (responseObj.panNumber == '') {
+      panDeclarationObj.declare_no_pan = '0'
+      await ambPanDeclarationLog.create(panDeclarationObj)
+    } else {
+      panDeclarationObj.declare_no_pan = '1'
+      await ambPanDeclarationLog.create(panDeclarationObj)
+    }
     let fileObject = {
       dcm_contacts_id: contact_id,
       file_type: "",
       file_size: 0,
       file_path: "",
-      created_at: "",
-      is_active: 1,
+      created_at: date_create,
+      is_active: '1',
       group_name: "",
       sub_group_name: "",
       custom1: "",
@@ -328,12 +383,61 @@ registrationController.addProfileRegistration = async (req, res) => {
     }
     commonResObj(res, 200, { additionalProfileDetails: responseObj });
   } catch (error) {
-    console.log(error)
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.addProfileRegistration", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error });
   }
 }
 
+registrationController.saleRegistration = async (req, res) => {
+  try {
+    const { claimed_by, hierarchies_id, org_id } = req.body;
+    let date_create = new Date().toISOString();
+    let responseObj = {
+      dcm_contacts_id: "",
+      area_filter: "",//to be discussed
+      product_purchased_from: "",
+      dcm_product_master_id: "",
+      claimed_quantity: "",
+      sale_date: ""
+    };
+    let hierarchyDetails = await dcm_hierarchies.findOne({ where: { "id": hierarchies_id, "dcm_organization_id": org_id } });
+    if (hierarchyDetails.name == "Contractor") {
+      let saleUserDetails = await dcm_salesData.findOne({ where: { "dcm_contacts_id": claimed_by } });
+      let contactDetails = await tempContactRegistration.findOne({ where: { "id": claimed_by } });
+      let finalSaleResp = {}
+      if (!saleUserDetails) {
+        let saleUserObj = {
+          id_extern01: contactDetails.id_extern01,
+          dcm_contacts_id: contactDetails.id,
+          dcm_product_master_id: 11,
+          tonnage_sold: 12.23,
+          claimed_quantity: 3,
+          invoice_id: 1,
+          sale_date: "18-10-2023 13:33:23",
+          created_by_contact_id: contactDetails.created_by,
+          product_purchased_from: 1,
+          created_at: date_create,
+          is_deleted: "0",
+          mode: 'mobileapp'
+        }
+        finalSaleResp = await dcm_salesData.create(saleUserObj)
+      } else {
+        finalSaleResp = saleUserDetails
+      }
+      responseObj.dcm_contacts_id = finalSaleResp.dcm_contacts_id;
+      responseObj.product_purchased_from = finalSaleResp.product_purchased_from;
+      responseObj.dcm_product_master_id = finalSaleResp.dcm_product_master_id;
+      responseObj.claimed_quantity = finalSaleResp.claimed_quantity;
+      responseObj.sale_date = finalSaleResp.sale_date;
+      commonResObj(res, 200, { saleRegistrationDetails: responseObj });
+    } else {
+      commonResObj(res, 200, { "message": "Please select only contractors" });
+    }
+  } catch (error) {
+    logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.tempRegistration", error: error, Api: regServiceUrl + req.url, status: 500 } });
+    commonResObj(res, 500, { error: error });
+  }
+}
 
 //==============   EXPORTING MODULE =================
 module.exports = registrationController

@@ -26,5 +26,6 @@ var uploads = multer({ storage: storage });
 router.post('/temporaryRegister', regValidtn._tempRegist, registrationController.tempRegistration) // AS OF NOW TEMPORARY REGISTRATIONS 
 router.post('/basic/profile', registrationController.basicProfileRegistration);
 router.post('/additional/profile', uploads.fields([{ name: 'pan_image', maxCount: 1 }, { name: 'front_image', maxCount: 1 }, { name: 'back_image', maxCount: 1 }]), registrationController.addProfileRegistration);
+router.post('/sale/register', registrationController.saleRegistration);
 
 module.exports = router;
