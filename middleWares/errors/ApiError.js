@@ -9,12 +9,11 @@ var filename = path.basename(__dirname)+"/"+path.basename(__filename);
 var registrationProfileNode_serviceUrl = process.env.registrationProfileNode_serviceUrl; 
 
 const  ApiErrors= {
-
+    
     checkBody:{},
     checkError:{},
-    checkUserRole:{},
+    checkUserAccessForTemReg:{},
     checkUserHierarchy:{},
-
 }
 
 
@@ -38,26 +37,42 @@ ApiErrors.checkBody = (req,res)=>{
     }else{ return true; }    
 }
 
-ApiErrors.checkUserRole  = ( req , res )=>{
-    let isRoleExist = false;
-    let roles = hirarchyIds
-    roles.forEach(role=>{
-        if(role.name == req.body.role){
-            isRoleExist =true
-        }
-    })
-    if(isRoleExist){
-        return isRoleExist
+ApiErrors.checkUserAccessForTemReg  = ( req , res )=>{
+    if(req.body.createdby_hierarchies_id == ''){
+        commonResObj(res,412,{validationErrors:{createdby_hierarchies_id:`please provide createdby_hierarchies_id`}})
     }else{
-        logger.log({ level: "info", message: { fileLocation: "Middlewares/"+filename+" ,ApiErrors.checkUserRole", method:req.method, validationErrors: `role ${req.body.role} is not exist , please provide valid role`, Api :registrationProfileNode_serviceUrl+req.url ,status:412} });
-        commonResObj(res,412,{validationErrors:{role:`role ${req.body.role} is not exist , please provide valid role`}})
+
+        let isAccessVerified = false;
+        let accessHirarchyId=[ 
+            {  hirarchyId : 0 , name : 'self' , access: true},
+            {  hirarchyId : 1 , name : 'Contractor' , access: true},
+            {  hirarchyId : 2 , name : 'Dealer', access: true },
+            {  hirarchyId : 3 , name : 'Retailer',access: true },
+            {  hirarchyId : 4 , name : 'Sales Force', access: true },
+            {  hirarchyId : 5 , name : 'Influencer' , },
+            {  hirarchyId : 6 , name : 'Engineer', access: true },
+            {  hirarchyId : 7 , name : 'TSO',access: false },
+        ]
+
+        accessHirarchyId.forEach(role=>{
+            if((role.hirarchyId == req.body.createdby_hierarchies_id) && (role.access == true)){
+                isAccessVerified =true
+            }
+        })
+
+        if(isAccessVerified){
+            return isAccessVerified
+        }else{
+            commonResObj(res,412,{validationErrors:{createdby_hierarchies_id:`${req.body.createdby_hierarchies_id} is disabled`}})
+        }
     }
+   
 }
+
 ApiErrors.checkUserHierarchy  = ( req , res )=>{
     let isRoleExist = false;
-    let roles = hirarchyIds
-    roles.forEach(role=>{
-        if(role.id == req.body.hierarchies_id){
+    hirarchyIds.forEach(role=>{
+        if((role.id == req.body.hierarchies_id) && (req.body.hierarchies_id != '') ){
             isRoleExist =true
         }
     })

@@ -11,12 +11,15 @@ const registrationValidation={
 }
 
 registrationValidation._tempRegist =  async(req,res,next) =>{
-   if(ApiError.checkBody(req,res)){
-      if(ApiError.checkUserHierarchy(req,res)){
-         const value = await  registrationSchema._tempRegSchema(req, res , next)
-         ApiError.checkError(value,req,res,next)
-      }
-   }
+  
+      if(ApiError.checkBody(req,res)){
+         if(ApiError.checkUserHierarchy(req,res)){
+            if(ApiError.checkUserAccessForTemReg(req, res)){
+               const value = await  registrationSchema._tempRegSchema(req, res , next)
+               ApiError.checkError(value,req,res,next)
+            }
+         }
+      } 
 }
 
 

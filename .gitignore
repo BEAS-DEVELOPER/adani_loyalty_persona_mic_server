@@ -1,2 +1,3 @@
 node_modules
-credentials.json
+config/credentials.json
+logs/error.log

@@ -25,8 +25,9 @@ const FildsValidation=(req , res , apiFor)=>{
                                     date_of_birth  : joi.date().required(),
                                     email_address  : joi.string().allow(null),
                                     gender         : joi.string().valid("M","F"),
-                                    role           : joi.string().required(),
                                     hierarchies_id : joi.string().required(),
+                                    createdby_hierarchies_id : joi.string().required(),
+                                    created_by      : joi.number().required(),
                                     identity_number : joi.string().required(),
                                     identity_number_type  : joi.string().valid('aadharcard','voterId','driving_license').required(),
                                     marital_status : joi.string().valid('Married','Single').required(), /// will applied on addition aprfile
@@ -35,7 +36,7 @@ const FildsValidation=(req , res , apiFor)=>{
                                     organization_Id: joi.string().required()
                                 }
                         break;
-                        case "Retailer":  //=================================  FOR USER ROLE CONTRACTOR
+                        case "Retailer":  //=================================  FOR USER ROLE RETAILER
                                 fields = {
                                     first_name     : joi.string().max(50).required(),
                                     middle_name    : joi.string().max(50).allow(''),
@@ -44,8 +45,9 @@ const FildsValidation=(req , res , apiFor)=>{
                                     date_of_birth  : joi.date().required(),
                                     email_address  : joi.string().allow(null),
                                     gender         : joi.string().valid("M","F"),
-                                    role           : joi.string().required(),
                                     hierarchies_id : joi.string().required(),
+                                    createdby_hierarchies_id : joi.string().required(),
+                                    created_by      : joi.number().required(),
                                     identity_number : joi.string().required(),
                                     identity_number_type  : joi.string().valid('aadharcard','voterId','driving_license').required(),
                                     marital_status : joi.string().valid('Married','Single').required(), /// will applied on addition aprfile
@@ -54,7 +56,7 @@ const FildsValidation=(req , res , apiFor)=>{
                                     organization_Id: joi.string().required()
                                 }
                         break;
-                        case "Influencer": //================================= FOR USER ROLE ENGINEER
+                        case "Influencer": //================================= FOR USER ROLE INFLUENCER
                                 fields = {
                                     first_name     : joi.string().max(50).required(),
                                     middle_name    : joi.string().max(50).allow(''),
@@ -63,8 +65,9 @@ const FildsValidation=(req , res , apiFor)=>{
                                     date_of_birth  : joi.date().required(),
                                     email_address  : joi.string().allow(null),
                                     gender         : joi.string().valid("M","F"),
-                                    role           : joi.string().required(),
                                     hierarchies_id : joi.string().required(),
+                                    createdby_hierarchies_id : joi.string().required(),
+                                    created_by      : joi.number().required(),
                                     identity_number : joi.string().required(),
                                     identity_number_type  : joi.string().valid('aadharcard','voterId','driving_license').required(),
                                     marital_status : joi.string().valid('Married','Single').required(), /// will applied on addition aprfile
@@ -73,7 +76,7 @@ const FildsValidation=(req , res , apiFor)=>{
                                     organization_Id: joi.string().required()
                                 }
                         break;
-                        case "Sales Force": //================================= FOR USER ROLE ENGINEER
+                        case "Sales Force": //================================= FOR USER ROLE SALES FORCE
                                 fields = {
                                     first_name     : joi.string().max(50).required(),
                                     middle_name    : joi.string().max(50).allow(''),
@@ -82,8 +85,9 @@ const FildsValidation=(req , res , apiFor)=>{
                                     date_of_birth  : joi.date().required(),
                                     email_address  : joi.string().allow(null),
                                     gender         : joi.string().valid("M","F"),
-                                    role           : joi.string().required(),
                                     hierarchies_id : joi.string().required(),
+                                    createdby_hierarchies_id : joi.string().required(),
+                                    created_by      : joi.number().required(),
                                     identity_number : joi.string().required(),
                                     identity_number_type  : joi.string().valid('aadharcard','voterId','driving_license').required(),
                                     marital_status : joi.string().valid('Married','Single').required(), /// will applied on addition aprfile
@@ -92,7 +96,7 @@ const FildsValidation=(req , res , apiFor)=>{
                                     organization_Id: joi.string().required()
                                 }
                         break;
-                        case "Contractor": //================================= FOR USER ROLE ENGINEER
+                        case "Contractor": //================================= FOR USER ROLE CONTRACTOR
                                 fields = {
                                     first_name     : joi.string().max(50).required(),
                                     middle_name    : joi.string().max(50).allow(''),
@@ -101,8 +105,9 @@ const FildsValidation=(req , res , apiFor)=>{
                                     date_of_birth  : joi.date().required(),
                                     email_address  : joi.string().allow(null),
                                     gender         : joi.string().valid("M","F"),
-                                    role           : joi.string().required(),
                                     hierarchies_id : joi.string().required(),
+                                    createdby_hierarchies_id : joi.string().required(),
+                                    created_by      : joi.number().required(),
                                     identity_number : joi.string().required(),
                                     identity_number_type  : joi.string().valid('aadharcard','voterId','driving_license').required(),
                                     marital_status : joi.string().valid('Married','Single').required(), /// will applied on addition aprfile
@@ -120,8 +125,9 @@ const FildsValidation=(req , res , apiFor)=>{
                                     date_of_birth  : joi.date().required(),
                                     email_address  : joi.string().allow(null),
                                     gender         : joi.string().valid("M","F"),
-                                    role           : joi.string().required(),
                                     hierarchies_id : joi.string().required(),
+                                    createdby_hierarchies_id : joi.string().required(),
+                                    created_by      : joi.number().required(),
                                     identity_number : joi.string().required(),
                                     identity_number_type  : joi.string().valid('aadharcard','voterId','driving_license').required(),
                                     marital_status : joi.string().valid('Married','Single').required(), /// will applied on addition aprfile
