@@ -66,6 +66,9 @@ module.exports = (sequelize, DataTypes) => {
         dcm_hierarchies_id: {
             type: DataTypes.INTEGER
         },
+        createdby_hierarchies_id:{
+            type: DataTypes.INTEGER
+        },
         is_verified: {
             type: DataTypes.STRING
         },
@@ -112,7 +115,34 @@ module.exports = (sequelize, DataTypes) => {
         },
         approved_at: {
             type: DataTypes.DATE
+        },
+
+        //__________________________
+        id_extern01:{
+            type: DataTypes.STRING
+        },
+        designation:{
+            type: DataTypes.STRING
+        },
+        is_verified:{
+            type: DataTypes.STRING
+        },
+        verified_by:{
+            type: DataTypes.STRING
+        },
+        dcm_languages_id:{
+            type: DataTypes.STRING
+        },
+        is_deleted:{
+            type: DataTypes.STRING
+        },
+        enrollment_date:{
+            type: DataTypes.STRING
+        },
+        can_redeem:{
+            type: DataTypes.STRING
         }
+
     }, {
         timestamps: false
     });

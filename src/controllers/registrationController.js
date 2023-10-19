@@ -55,8 +55,13 @@ async function paramsOperations(org_id, contact_id, master_name, params_value) {
   return response;
 }
 
+async function  add_contractor_to_branch(parent_id, contractor_id) { //  parent_id = > created_by_id , contractor_id = > contact_id
+
+}
+
 registrationController.tempRegistration = async (req, res) => {
   try {
+  
 
     let date_create = new Date().toISOString();
 
@@ -69,9 +74,24 @@ registrationController.tempRegistration = async (req, res) => {
       date_of_birth: (req.body.date_of_birth) ? req.body.gender : '',
       created_at: date_create,
       dcm_organization_id: req.body.organization_Id,
-      dcm_hierarchies_id : (req.body.hierarchies_id)?req.body.hierarchies_id:''
+      dcm_hierarchies_id : req.body.hierarchies_id,
+      createdby_hierarchies_id : req.body.createdby_hierarchies_id,
+      created_by:req.body.created_by,
+      id_extern01: req.body.mobile_number ,
+      designation : 'Not Mentioned',
+      is_verified:(req.body.is_verified == undefined)?'0':req.body.is_verified,
+      verified_by: (req.body.verified_by == undefined)?'0':req.body.verified_by,
+      dcm_languages_id :(req.body.dcm_languages_id == undefined)?'1':req.body.dcm_languages_id,
+      can_redeem : (req.body.can_redeem == undefined)?'1':req.body.can_redeem,
+      enrollment_date: date_create, // yyyy-mm-dd
+      is_deleted: '0',
     };
     let responseObjContact = await tempContactRegistration.create(tempRegContactsObj);
+
+    let branch_id = add_contractor_to_branch(req.body.created_by,responseObjContact.id)
+
+
+
 
     // ========================  TO BE STORED IN dcm_groupMembersInfo
     let groupMembrsObj = {
