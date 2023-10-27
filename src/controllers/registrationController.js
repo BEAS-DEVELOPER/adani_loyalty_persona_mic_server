@@ -5,8 +5,12 @@ const groupMembersIds = require('../../config/dcm_groupMemberIds')
 // const JwtService = require('../../../services/JwtService')
 // const refreshJwtService = require('../../../services/refreshJwtService')
 // const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken')
 const { basicProfile, tempContactRegistration, tempPhoneRegistration, tempEmailRegistration, parentChildMapping, organization, paramsMaster,
   paramsValue, companies, ambContactTagMap, userFile, dcm_groups, dcm_groupMembers, dcm_groupMembersInfo, dcm_hierarchies, dcm_salesData, ambPanDeclarationLog } = require('../../config/db.config')
+
+const passport = require('passport');
+require('../../passport-config');
 
 require("dotenv").config();
 const logger = require('../../supports/logger')
@@ -25,7 +29,8 @@ const registrationController = {
   tempRegistration: {},
   basicProfileRegistration: {},
   addProfileRegistration: {},
-  saleRegistration: {}
+  saleRegistration: {},
+  login: {}
 
 }
 
@@ -54,13 +59,13 @@ async function paramsOperations(org_id, contact_id, master_name, params_value) {
   return response;
 }
 
-async function  add_contractor_to_branch(parent_id, contractor_id) { //  parent_id = > created_by_id , contractor_id = > contact_id
+async function add_contractor_to_branch(parent_id, contractor_id) { //  parent_id = > created_by_id , contractor_id = > contact_id
 
 }
 
 registrationController.tempRegistration = async (req, res) => {
   try {
-  
+
 
     let date_create = new Date().toISOString();
 
@@ -73,21 +78,21 @@ registrationController.tempRegistration = async (req, res) => {
       date_of_birth: (req.body.date_of_birth) ? req.body.gender : '',
       created_at: date_create,
       dcm_organization_id: req.body.organization_Id,
-      dcm_hierarchies_id : req.body.hierarchies_id,
-      createdby_hierarchies_id : req.body.createdby_hierarchies_id,
-      created_by:req.body.created_by,
-      id_extern01: req.body.mobile_number ,
-      designation : 'Not Mentioned',
-      is_verified:(req.body.is_verified == undefined)?'0':req.body.is_verified,
-      verified_by: (req.body.verified_by == undefined)?'0':req.body.verified_by,
-      dcm_languages_id :(req.body.dcm_languages_id == undefined)?'1':req.body.dcm_languages_id,
-      can_redeem : (req.body.can_redeem == undefined)?'1':req.body.can_redeem,
+      dcm_hierarchies_id: req.body.hierarchies_id,
+      createdby_hierarchies_id: req.body.createdby_hierarchies_id,
+      created_by: req.body.created_by,
+      id_extern01: req.body.mobile_number,
+      designation: 'Not Mentioned',
+      is_verified: (req.body.is_verified == undefined) ? '0' : req.body.is_verified,
+      verified_by: (req.body.verified_by == undefined) ? '0' : req.body.verified_by,
+      dcm_languages_id: (req.body.dcm_languages_id == undefined) ? '1' : req.body.dcm_languages_id,
+      can_redeem: (req.body.can_redeem == undefined) ? '1' : req.body.can_redeem,
       enrollment_date: date_create, // yyyy-mm-dd
       is_deleted: '0',
     };
     let responseObjContact = await tempContactRegistration.create(tempRegContactsObj);
 
-    let branch_id = add_contractor_to_branch(req.body.created_by,responseObjContact.id)
+    let branch_id = add_contractor_to_branch(req.body.created_by, responseObjContact.id)
 
 
 
@@ -331,8 +336,8 @@ registrationController.addProfileRegistration = async (req, res) => {
     }
     let panDeclarationObj = {
       dcm_contact_id: contact_id,
-      dcm_order_id: 0,
-      declaration_type: "O",
+      dcm_order_id: null,
+      declaration_type: "E",
       declare_no_pan: "0",
       created_at: date_create
     }
@@ -410,35 +415,55 @@ registrationController.addProfileRegistration = async (req, res) => {
 
 registrationController.saleRegistration = async (req, res) => {
   try {
-    const { claimed_by, hierarchies_id, org_id } = req.body;
+    let hierarchies_id = req.body.hierarchies_id ? req.body.hierarchies_id : null;
+    let org_id = req.body.org_id ? req.body.org_id : null;
+    let id_extern_01 = req.body.id_extern_01 ? req.body.id_extern_01 : '';
+    let sale_contact_id = req.body.sale_contact_id ? req.body.sale_contact_id : null;
+    let product_master_id = req.body.product_master_id ? req.body.product_master_id : null;
+    let approve_qty = req.body.approve_qty ? req.body.approve_qty : null;
+    let sold = req.body.sold ? req.body.sold : null;
+    let date = req.body.date ? req.body.date : null;
+    let product_purchased_from = req.body.product_purchased_from ? req.body.product_purchased_from : null;
+    let created_by_contact_id = req.body.created_by_contact_id ? req.body.created_by_contact_id : null;
+    let is_verified = req.body.is_verified ? req.body.is_verified : null;
+    let mode = req.body.mode ? req.body.mode : null;
+    let verified_by = req.body.verified_by ? req.body.verified_by : null;
+    let category_id = req.body.category_id ? req.body.category_id : null;
     let date_create = new Date().toISOString();
     let responseObj = {
       dcm_contacts_id: "",
-      area_filter: "",//to be discussed
+      area_filter: "",
       product_purchased_from: "",
       dcm_product_master_id: "",
       claimed_quantity: "",
       sale_date: ""
     };
-    let hierarchyDetails = await dcm_hierarchies.findOne({ where: { "id": hierarchies_id, "dcm_organization_id": org_id } });
-    if (hierarchyDetails.name == "Contractor") {
-      let saleUserDetails = await dcm_salesData.findOne({ where: { "dcm_contacts_id": claimed_by } });
-      let contactDetails = await tempContactRegistration.findOne({ where: { "id": claimed_by } });
+    let contractHierarchyDetails = await dcm_hierarchies.findOne({ where: { "id": hierarchies_id, "dcm_organization_id": org_id } });
+    let TSOHierarchyDetails = await dcm_hierarchies.findOne({ where: { "id": created_by_contact_id, "dcm_organization_id": org_id } });
+    if (contractHierarchyDetails.name == "Contractor" && TSOHierarchyDetails.name == "TSO") {
+      let saleUserDetails = await dcm_salesData.findOne({ where: { "dcm_contacts_id": sale_contact_id } });
       let finalSaleResp = {}
       if (!saleUserDetails) {
         let saleUserObj = {
-          id_extern01: contactDetails.id_extern01,
-          dcm_contacts_id: contactDetails.id,
-          dcm_product_master_id: 11,
-          tonnage_sold: 12.23,
-          claimed_quantity: 3,
-          invoice_id: 1,
-          sale_date: "18-10-2023 13:33:23",
-          created_by_contact_id: contactDetails.created_by,
-          product_purchased_from: 1,
-          created_at: date_create,
-          is_deleted: "0",
-          mode: 'mobileapp'
+          'id_extern01': id_extern_01,
+          'dcm_contacts_id': sale_contact_id,
+          'dcm_product_master_id': product_master_id,
+          'tonnage_sold': (approve_qty < 0) ? sold : approve_qty,
+          'claimed_quantity': sold,
+          'sale_date': date,
+          'product_purchased_from': product_purchased_from,
+          'created_by_contact_id': created_by_contact_id,
+          'created_at': date_create,
+          'is_deleted': '0',
+          'is_verified': is_verified,
+          "verified_at": null,
+          'mode': mode,
+          'verified_by': verified_by,
+          'category_id': category_id
+        }
+        if (is_verified != '0') {
+          let date_verified = new Date().toISOString();
+          saleUserObj.verified_at = date_verified;
         }
         finalSaleResp = await dcm_salesData.create(saleUserObj)
       } else {
@@ -455,6 +480,34 @@ registrationController.saleRegistration = async (req, res) => {
     }
   } catch (error) {
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.tempRegistration", error: error, Api: regServiceUrl + req.url, status: 500 } });
+    commonResObj(res, 500, { error: error });
+  }
+}
+
+registrationController.login = async (req, res, next) => {
+  try {
+    passport.authenticate('local', { session: false }, async function (err, user, info) {
+      if (err) { return next(err) }
+      if (!user) {
+        commonResObj(res, 401, { message: info, })
+      } else {
+        const payload = {
+          id: user.id,
+          username: user.username,
+          is_active: user.is_active,
+          dcm_hierarchies_id: user.dcm_hierarchies_id,
+          dcm_organization_id: user.dcm_organization_id,
+          dcm_contacts_id: user.dcm_contacts_id
+        }
+        const options = {
+          subject: `${user.id}`
+        }
+        const token = jwt.sign(payload, `${process.env.jwt_secret}`, options);
+        commonResObj(res, 200, { message: 'Login Successful', userData: payload, access_token: token })
+      }
+    })(req, res, next);
+  } catch (error) {
+    logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.loginUser", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error });
   }
 }
