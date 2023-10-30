@@ -61,10 +61,18 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.DATE
         },
         sf_guard_user_id: {
-            type: DataTypes.INTEGER
+            type: DataTypes.INTEGER,
+            // references: {
+            //     model: 'sf_guard_user', 
+            //     key: 'id'
+            // }
         },
         dcm_hierarchies_id: {
-            type: DataTypes.INTEGER
+            type: DataTypes.INTEGER,
+            references: {
+                model: 'dcm_hierarchies', 
+                key: 'id'
+            }
         },
         is_verified: {
             type: DataTypes.STRING
@@ -76,10 +84,11 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER
         },
         dcm_organization_id: {
-            type: DataTypes.INTEGER
-        },
-        id_extern01: {
-            type: DataTypes.STRING
+            type: DataTypes.INTEGER,
+            references: {
+                model: 'dcm_organization', 
+                key: 'id'
+            }
         },
         id_extern02: {
             type: DataTypes.STRING
@@ -97,7 +106,11 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING
         },
         dcm_languages_id: {
-            type: DataTypes.INTEGER
+            type: DataTypes.INTEGER,
+            references: {
+                model: 'dcm_languages', 
+                key: 'id'
+            }
         },
         can_redeem: {
             type: DataTypes.ENUM,
@@ -117,6 +130,10 @@ module.exports = (sequelize, DataTypes) => {
         //__________________________
         id_extern01:{
             type: DataTypes.STRING
+            // references: {
+            //     model: 'dcm_sale_data', 
+            //     key: 'id_extern01'
+            // }
         },
         designation:{
             type: DataTypes.STRING
@@ -125,9 +142,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING
         },
         verified_by:{
-            type: DataTypes.STRING
-        },
-        dcm_languages_id:{
             type: DataTypes.STRING
         },
         is_deleted:{
