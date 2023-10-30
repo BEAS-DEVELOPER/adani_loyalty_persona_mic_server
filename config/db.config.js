@@ -59,6 +59,7 @@ db.sequelize = sequelize
 
 db.organization = require('../src/models/dcm_organizationModel')(sequelize, DataTypes)
 db.dcm_hierarchies = require('../src/models/dcm_hierarchiesModel')(sequelize, DataTypes)
+db.dcm_languages = require('../src/models/dcm_languages')(sequelize, DataTypes)
 db.tempContactRegistration = require('../src/models/dcm_registrationContactModel')(sequelize, DataTypes)
 db.tempPhoneRegistration = require('../src/models/registrationPhoneModel')(sequelize, DataTypes)
 db.tempEmailRegistration = require('../src/models/dcm_registrationEmailModel')(sequelize, DataTypes)
@@ -78,8 +79,11 @@ db.dcm_groups = require('../src/models/dcm_groupsModel')(sequelize, DataTypes)
 db.dcm_groupMembers = require('../src/models/dcm_groupMembersModel')(sequelize, DataTypes)
 db.dcm_groupMembersInfo = require('../src/models/dcm_groupMembersInfoModel')(sequelize, DataTypes)
 db.dcm_salesData = require('../src/models/dcm_salesDataModel')(sequelize, DataTypes)
-db.ambPanDeclarationLog=require('../src/models/ambPanDeclarationLog')(sequelize, DataTypes)
-db.sfGuardUser=require('../src/models/sfGuardUserModel')(sequelize, DataTypes)
+db.ambPanDeclarationLog = require('../src/models/ambPanDeclarationLog')(sequelize, DataTypes)
+db.sfGuardUser = require('../src/models/sfGuardUserModel')(sequelize, DataTypes)
+db.cog_countries = require('../src/models/cog_countries')(sequelize, DataTypes)
+db.cog_states = require('../src/models/cog_states')(sequelize, DataTypes)
+db.cog_cities = require('../src/models/cog_cities')(sequelize, DataTypes)
 
 
 db.dcm_hierarchies.hasMany(db.organization, { foreignKey: "id" })
@@ -102,7 +106,9 @@ db.dcm_salesData.hasOne(db.tempContactRegistration, { foreignKey: "id" })
 db.sfGuardUser.hasMany(db.dcm_hierarchies, { foreignKey: "id" })
 db.sfGuardUser.hasMany(db.organization, { foreignKey: "id" })
 db.sfGuardUser.hasOne(db.tempContactRegistration, { foreignKey: "id" })
-
+db.cog_states.hasMany(db.cog_countries, { foreignKey: "id" })
+db.cog_cities.hasMany(db.cog_countries, { foreignKey: "id" })
+db.cog_cities.hasMany(db.cog_states, { foreignKey: "id" })
 
 db.sequelize.sync({ force: false })
 // .then(() => {

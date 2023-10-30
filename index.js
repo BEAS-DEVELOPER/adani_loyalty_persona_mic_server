@@ -1,5 +1,3 @@
-
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -22,10 +20,12 @@ app.use("/apiDoc/adani_microservic_1", swaggerUI.serve, swaggerUI.setup(adminser
 
 // SERVICES BASE URL
 const registrationProfileNode_baseUrl = process.env.registrationProfileNode_baseUrl;
+const masterNodebaseUrl = process.env.masterNode_baseUrl;
 
 // REGISTRATION  ROUTES
+const masterRoute = require('./src/routes/masterRoute');
 const registrationRoute = require('./src/routes/registrationRoute');
-const authnRoute = require('./src/routes/authnRoutes')
+const authnRoute = require('./src/routes/authnRoute');
 
 //============ WELCOME TO HOME  ===============
 app.use("/server", (req, res) => {
@@ -36,7 +36,7 @@ app.use("/server", (req, res) => {
 // registrationProfileNode ROUTES  EXECUTIONS 
 app.use(registrationProfileNode_baseUrl, registrationRoute); //   REGISTRATION  ROUTER
 app.use(registrationProfileNode_baseUrl, passport.authenticate('jwt', { session: false }), authnRoute);
-
+app.use(masterNodebaseUrl, masterRoute);
 
 
 // SERVER STARTING 

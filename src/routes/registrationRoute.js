@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const registrationController = require('../controllers/registrationController');
 const regValidtn = require('../validations/registerValidation');
-var multer = require('multer');
+// var multer = require('multer');
 
 // var storage = multer.diskStorage({
 //     destination: (req, file, cb) => {

@@ -1,5 +1,5 @@
 const registrationModal = require('../models/dcm_registrationContactModel');
-const commonResObj = require('../..//middleWares/responses/commonResponse')
+const commonResObj = require('../../middleWares/responses/commonResponse')
 const paramsMasterIds = require('../../config/dcm_paramsMasterIds')
 const groupMembersIds = require('../../config/dcm_groupMemberIds')
 // const JwtService = require('../../../services/JwtService')
@@ -7,7 +7,7 @@ const groupMembersIds = require('../../config/dcm_groupMemberIds')
 // const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken')
 const { basicProfile, tempContactRegistration, tempPhoneRegistration, tempEmailRegistration, parentChildMapping, organization, paramsMaster,
-  paramsValue, companies, ambContactTagMap, userFile, dcm_groups, dcm_groupMembers, dcm_groupMembersInfo, dcm_hierarchies, dcm_salesData, ambPanDeclarationLog } = require('../../config/db.config')
+  paramsValue, companies, ambContactTagMap, userFile, dcm_groups, dcm_groupMembers, dcm_groupMembersInfo, dcm_hierarchies, dcm_salesData, ambPanDeclarationLog, dcm_languages } = require('../../config/db.config')
 
 const passport = require('passport');
 require('../../passport-config');
@@ -25,7 +25,6 @@ var regServiceUrl = process.env.registrationProfileNode_serviceUrl;
 
 
 const registrationController = {
-
   tempRegistration: {},
   basicProfileRegistration: {},
   addProfileRegistration: {},
@@ -476,7 +475,7 @@ registrationController.saleRegistration = async (req, res) => {
       responseObj.sale_date = finalSaleResp.sale_date;
       commonResObj(res, 200, { saleRegistrationDetails: responseObj });
     } else {
-      commonResObj(res, 200, { "message": "Please select only contractors" });
+      commonResObj(res, 200, { "message": "Please select only contractors and TSO" });
     }
   } catch (error) {
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.tempRegistration", error: error, Api: regServiceUrl + req.url, status: 500 } });
