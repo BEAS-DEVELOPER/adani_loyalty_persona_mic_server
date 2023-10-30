@@ -81,7 +81,6 @@ db.dcm_groupMembersInfo = require('../src/models/dcm_groupMembersInfoModel')(seq
 db.dcm_salesData = require('../src/models/dcm_salesDataModel')(sequelize, DataTypes)
 db.ambPanDeclarationLog=require('../src/models/ambPanDeclarationLog')(sequelize, DataTypes)
 db.sf_guard_user=require('../src/models/sfGuardModel')(sequelize, DataTypes)
-
 db.dcm_contactCompanies=require('../src/models/dcm_contactCompaniesModel')(sequelize, DataTypes)
 
 

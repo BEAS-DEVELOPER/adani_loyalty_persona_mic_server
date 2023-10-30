@@ -33,19 +33,29 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER
         },
         dcm_hierarchies_id:{
-            type: DataTypes.INTEGER
+            type: DataTypes.INTEGER,
+            references: {
+                model: 'dcm_hierarchies',
+                key: 'id'
+            }
         },
         dcm_contacts_id:{
-            type: DataTypes.STRING
+            type: DataTypes.STRING,
+            references: {
+                model: 'dcm_contacts',
+                key: 'id'
+            }
         },
         dcm_organization_id:{
-            type: DataTypes.INTEGER
+            type: DataTypes.INTEGER,
+            references: {
+                model: 'dcm_organization',
+                key: 'id'
+            }
         },
         force_pass_chaged:{
             type: DataTypes.TINYINT
         },
-       
-       
     }, {
         freezeTableName: true,
         timestamps: false
