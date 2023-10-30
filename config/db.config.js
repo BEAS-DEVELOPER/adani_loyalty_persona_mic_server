@@ -100,6 +100,9 @@ db.dcm_groupMembers.hasMany(db.dcm_groups, { foreignKey: "id" })
 db.dcm_groupMembersInfo.hasMany(db.dcm_groupMembers, { foreignKey: "id" })
 db.dcm_groupMembersInfo.hasOne(db.tempContactRegistration, { foreignKey: "id" })
 db.dcm_salesData.hasOne(db.tempContactRegistration, { foreignKey: "id" })
+db.sfGuardUser.hasMany(db.dcm_hierarchies, { foreignKey: "id" })
+db.sfGuardUser.hasMany(db.organization, { foreignKey: "id" })
+db.sfGuardUser.hasOne(db.tempContactRegistration, { foreignKey: "id" })
 
 
 db.sequelize.sync({ force: false })
