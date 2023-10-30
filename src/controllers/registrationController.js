@@ -164,7 +164,7 @@ registrationController.tempRegistration = async (req, res) => {
         middle_name:req.body.full_name.split(' ').length>3?req.body.full_name.split(' ')[1]:'',
         last_name: req.body.full_name.split(' ').length>3?req.body.full_name.split(' ')[2]:req.body.full_name.split(' ')[1],
         gender: (req.body.gender) ? req.body.gender : '',
-        date_of_birth: (req.body.date_of_birth) ? req.body.gender : '',
+        date_of_birth: (req.body.date_of_birth) ?  moment(req.body.date_of_birth).format('YYYY-MM-DD'): '',
         created_at: date_create,
         dcm_organization_id: req.body.organization_Id,
         dcm_hierarchies_id : req.body.hierarchies_id,
