@@ -3,7 +3,7 @@ const commonResObj = require('../..//middleWares/responses/commonResponse')
 const paramsMasterIds = require('../../config/dcm_paramsMasterIds')
 const groupMembersIds = require('../../config/dcm_groupMemberIds')
 
-
+var md5 = require('js-md5');
 
 const dbConn = require('../../config/db.config')
 const bcrypt = require('bcryptjs');
@@ -11,7 +11,7 @@ const hyrarchiesIds = require('../../config/dcm_hierarchyIds')
 
 // const JwtService = require('../../../services/JwtService')
 // const refreshJwtService = require('../../../services/refreshJwtService')
-// const bcrypt = require('bcryptjs');
+const crypto = require('crypto')
 
 const { basicProfile, tempContactRegistration, tempPhoneRegistration, tempEmailRegistration, 
   parentChildMapping, organization, paramsMaster, paramsValue, companies, ambContactTagMap, userFile,
@@ -92,12 +92,6 @@ function getHirarchyIdsOf(hirarchyIdsOf){
 
 
 function generatePasswordString(){
-  // let smallchars = "abcdefghijklmnopqrstuvwxyz";
-  // let capitalchars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  // let numberchars = "0123456789";
-  // let specialchars = "!@#_";
-  // return str_shuffle(substr( str_shuffle( smallchars ), 0, 3 ).substr( str_shuffle( numberchars ), 0, 2 ).substr( str_shuffle( capitalchars ), 0, 2 ).substr( str_shuffle( specialchars ), 0, 1 ));
-
   let pass = '';
   let str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' + 'abcdefghijklmnopqrstuvwxyz' + '0123456789 ' + '!@#_';
   for (let i = 1; i <= 8; i++) {
@@ -130,11 +124,10 @@ async function  add_contractor_to_branch(parent_id, contractor_id) { //  parent_
 }
 
 function generateEmailVefificationCode(email){
-     let md5code = md5(email)
-     let code    = md5code.substr(0, 10); 
-     let code64  = substr(base64_encode(code, 0, 12));
-     console.log("_____________EMAIL VERIFICATION CODE : " , code64)
-     return code64
+   //md5code  let md5code = md5(email)
+   return  crypto.createHash('md5').update(email).digest("hex")
+
+    // return code64
 }
 
 registrationController.tempRegistration = async (req, res) => {
@@ -312,7 +305,7 @@ registrationController.tempRegistration = async (req, res) => {
         dcm_contacts_id: responseObjContact.dataValues.id,
         country_code:'+91',
         is_verified:'1',
-        dcm_organization_id:eq.body.organization_Id,
+        dcm_organization_id:req.body.organization_Id,
         is_default : '1',
         dcm_group_member_id:''//===========================>???
 

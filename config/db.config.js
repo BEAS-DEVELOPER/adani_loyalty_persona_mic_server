@@ -80,6 +80,7 @@ db.dcm_groupMembersInfo = require('../src/models/dcm_groupMembersInfoModel')(seq
 db.dcm_salesData = require('../src/models/dcm_salesDataModel')(sequelize, DataTypes)
 db.ambPanDeclarationLog=require('../src/models/ambPanDeclarationLog')(sequelize, DataTypes)
 db.sf_guard_user=require('../src/models/sfGuardModel')(sequelize, DataTypes)
+
 db.dcm_contactCompanies=require('../src/models/dcm_contactCompaniesModel')(sequelize, DataTypes)
 
 
@@ -100,9 +101,9 @@ db.dcm_groupMembers.hasMany(db.dcm_groups, { foreignKey: "id" })
 db.dcm_groupMembersInfo.hasMany(db.dcm_groupMembers, { foreignKey: "id" })
 db.dcm_groupMembersInfo.hasOne(db.tempContactRegistration, { foreignKey: "id" })
 db.dcm_salesData.hasOne(db.tempContactRegistration, { foreignKey: "id" })
-db.sfGuardUser.hasMany(db.dcm_hierarchies, { foreignKey: "id" })
-db.sfGuardUser.hasMany(db.organization, { foreignKey: "id" })
-db.sfGuardUser.hasOne(db.tempContactRegistration, { foreignKey: "id" })
+db.sf_guard_user.hasMany(db.dcm_hierarchies, { foreignKey: "id" })
+db.sf_guard_user.hasMany(db.organization, { foreignKey: "id" })
+db.sf_guard_user.hasOne(db.tempContactRegistration, { foreignKey: "id" })
 
 
 db.sequelize.sync({ force: false })
