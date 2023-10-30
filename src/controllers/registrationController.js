@@ -124,10 +124,7 @@ async function  add_contractor_to_branch(parent_id, contractor_id) { //  parent_
 }
 
 function generateEmailVefificationCode(email){
-   //md5code  let md5code = md5(email)
-  // console.log(crypto.createHash('md5').update(email).digest("hex"))
-
-   return  "fdsfsfdfsf55453"//crypto.createHash('md5').update(email).digest("hex")
+   return  crypto.createHash('md5').update(email).digest("hex")
 }
 
 registrationController.tempRegistration = async (req, res) => {
@@ -298,7 +295,9 @@ registrationController.tempRegistration = async (req, res) => {
     //const [data,result] = await dbConn.sequelize.query("SELECT * FROM amb_contact_tag_mapping CROSS JOIN amb_tags ON amb_tags.id = amb_contact_tag_mapping.amb_tags_id WHERE  amb_contact_tag_mapping.dcm_contact_id = ?", { replacements: [parent_id], })
     
     //query("select gm.id as id from dcm_group_members gm join dcm_groups g on (gm.master_groups_id = g.id) where g.name = 'Phone Type' and LOWER(gm.name) = '" . strtolower($as_group_mem) . "'")->row()->id;
-
+    
+    let dcmgrpId  = await dbConn.sequelize.query("select gm.id as id from dcm_group_members gm join dcm_groups g on (gm.master_groups_id = g.id) where g. name = 'Phone Type' and LOWER(gm.name) = 'mobile'" )
+    console.log("dcmgrpIddcmgrpIddcmgrpId" , dcmgrpId)
       let tempRegPhoneObj = {
         number: (req.body.mobile_number) ? req.body.mobile_number : '',
         created_at: date_create,
@@ -307,7 +306,7 @@ registrationController.tempRegistration = async (req, res) => {
         is_verified:'1',
         dcm_organization_id:req.body.organization_Id,
         is_default : '1',
-        dcm_group_member_id:''//===========================>???
+        dcm_group_member_id:dcmgrpId//===========================>???
 
 
       }
@@ -319,7 +318,7 @@ registrationController.tempRegistration = async (req, res) => {
         created_at: date_create,
         dcm_contacts_id: responseObjContact.id,
         dcm_organization_id:req.body.organization_Id,
-        verification_code:generateEmailVefificationCode()
+        verification_code:generateEmailVefificationCode(req.body.email_address)
 
       }
       let responseObjEmail = await tempEmailRegistration.create(tempRegEmailObj);
