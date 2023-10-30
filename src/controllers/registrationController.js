@@ -456,7 +456,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
         let branches = [];
         for(let i=0;i<dealer_arr.length;i++) {
           await branchesContactsParent(dealer_arr[i]);
-        }
+        }//
         responseObj = {
           "chooseDealer": dealer_arr,
           "contractorCategory": tagsId,
