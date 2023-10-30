@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true
         },
         username:{
-            type: DataTypes.INTEGER
+            type: DataTypes.STRING
         },
         algorithm:{
             type : DataTypes.STRING

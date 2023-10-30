@@ -11,7 +11,7 @@ const hyrarchiesIds = require('../../config/dcm_hierarchyIds')
 
 // const JwtService = require('../../../services/JwtService')
 // const refreshJwtService = require('../../../services/refreshJwtService')
-const crypto = require('crypto')
+const cryptoJS = require('crypto')
 
 const { basicProfile, tempContactRegistration, tempPhoneRegistration, tempEmailRegistration,
   parentChildMapping, organization, paramsMaster, paramsValue, companies, ambContactTagMap, userFile,
@@ -44,18 +44,42 @@ const registrationController = {
 
 }
 
-async function branchesContactsParent(dealer_arr = []) {
-  let branches = [];
-  for (let i = 0; i < dealer_arr.length; i++) {
-    let mapDealerObj = {
-      dealer_id: dealer_arr[i].dealer_id,
-      contractor_id: contact_id,
-      is_active: "1"
-    };
-    let parentChildMap = await parentChildMapping.create(mapDealerObj);
-    branches = dbConn.sequelize.query("SELECT DISTINCT amb_tags.name FROM amb_contact_tag_mapping JOIN amb_tags on amb_tags.id=amb_contact_tag_mapping.amb_tags_id WHERE amb_contact_tag_mapping.dcm_contact_id = ", parentChildMap.dealer_id, " AND amb_tags.is_active = '1' AND amb_contact_tag_mapping.is_active = '1'");
+async function branchesContactsParent(dealer_id) {
+  let mapDealerObj = {
+    dealer_id: dealer_id,
+    contractor_id: contact_id,
+    is_active: "1"
+  };
+  let parentChildMap = await parentChildMapping.create(mapDealerObj);
+  let branch = await dbConn.sequelize.query("SELECT DISTINCT amb_tags.name FROM amb_contact_tag_mapping JOIN amb_tags on amb_tags.id=amb_contact_tag_mapping.amb_tags_id WHERE amb_contact_tag_mapping.dcm_contact_id = ", parentChildMap.dealer_id, " AND amb_tags.is_active = '1' AND amb_contact_tag_mapping.is_active = '1'");
+  return branch;
+}
+
+async function create_zone_contact_mapping(zone_name,contact_id){
+  let zonemap=await dbConn.sequelize.query("SELECT * FROM dcm_zone_location_mapping JOIN dcm_zones ON dcm_zones.id=dcm_zone_location_mapping.dcm_zone_id WHERE dcm_zones.zone_name= ",zone_name);
+  let date_create=new Date().toISOString();
+  if(zonemap.length>0) {
+    for(let i=0;i<zonemap.length;i++) {
+      let zoneObj={
+        dcm_zone_location_mapping_id:zonemap[i].id,
+        dcm_zone_id:zonemap[i].dcm_zone_id,
+        dcm_contact_id:contact_id,
+        created_at:date_create
+      }
+      let chk=await dbConn.sequelize.query("SELECT * FROM dcm_zone_contact_mapping WHERE dcm_zone_location_mapping_id= ",zoneObj.dcm_zone_location_mapping_id," AND dcm_zone_id= ",zoneObj.dcm_zone_id," AND dcm_contact_id= ",zoneObj.dcm_contact_id);
+      if(chk.length<=0) {
+        await dcm_zoneContactMap.create(zoneObj);
+      } else {
+        let date_update=new Date().toISOString();
+        await dcm_zoneContactMap.update({"updated_at":date_update},{where:{
+          dcm_zone_location_mapping_id:zonemap[i].id,
+          dcm_zone_id:zonemap[i].dcm_zone_id,
+          dcm_contact_id:contact_id,
+          created_at:date_create
+        }})
+      }
+    }
   }
-  return branches;
 }
 
 async function paramsOperations(org_id, contact_id, master_name, params_value) {
@@ -112,7 +136,7 @@ function generatePasswordString() {
       * str.length + 1);
     pass += str.charAt(char)
   }
-  console.log("_______________PASSWORD : " , pass)
+  console.log("_______________PASSWORD : ", pass)
   return pass;
 }
 
@@ -137,11 +161,10 @@ async function add_contractor_to_branch(parent_id, contractor_id) { //  parent_i
   return array_push;
 }
 
-function generateEmailVefificationCode(email){
-   //md5code  let md5code = md5(email)
-  // console.log(crypto.createHash('md5').update(email).digest("hex"))
-
-   return  "fdsfsfdfsf55453"//crypto.createHash('md5').update(email).digest("hex")
+function generateEmailVefificationCode(email) {
+  //md5code  let md5code = md5(email)
+  const hash=cryptoJS.createHash('md5').update(email).digest("hex")
+  return hash;
 }
 
 registrationController.tempRegistration = async (req, res) => {
@@ -178,7 +201,7 @@ registrationController.tempRegistration = async (req, res) => {
         middle_name: req.body.full_name.split(' ').length > 3 ? req.body.full_name.split(' ')[1] : '',
         last_name: req.body.full_name.split(' ').length > 3 ? req.body.full_name.split(' ')[2] : req.body.full_name.split(' ')[1],
         gender: (req.body.gender) ? req.body.gender : '',
-        date_of_birth: (req.body.date_of_birth) ?  moment(req.body.date_of_birth).format('YYYY-MM-DD'): '',
+        date_of_birth: (req.body.date_of_birth) ? moment(req.body.date_of_birth).format('YYYY-MM-DD') : '',
         created_at: date_create,
         dcm_organization_id: req.body.organization_Id,
         dcm_hierarchies_id: req.body.hierarchies_id,
@@ -321,7 +344,7 @@ registrationController.tempRegistration = async (req, res) => {
         is_verified: '1',
         dcm_organization_id: req.body.organization_Id,
         is_default: '1',
-        dcm_group_member_id: ''//===========================>???
+        dcm_group_member_id: 1//===========================>???
 
 
       }
@@ -333,7 +356,7 @@ registrationController.tempRegistration = async (req, res) => {
         created_at: date_create,
         dcm_contacts_id: responseObjContact.id,
         dcm_organization_id: req.body.organization_Id,
-        verification_code: generateEmailVefificationCode()
+        verification_code: generateEmailVefificationCode(req.body.email_address)
 
       }
       let responseObjEmail = await tempEmailRegistration.create(tempRegEmailObj);
@@ -407,8 +430,9 @@ registrationController.basicProfileRegistration = async (req, res) => {
       let tagsId = contractDetails.amb_tags_id;
       let mappingOfficer = "";
       let responseObj = {};
-      let hierarchyDetails = await dcm_hierarchies.findOne({ where: { "name": "Dealer", "dcm_organization_id": org_id } });
-      if (hierarchyDetails.id == contactDetails.dcm_hierarchies_id) {
+      let hierarchyDealerDetails = await dcm_hierarchies.findOne({ where: { "name": "Dealer", "dcm_organization_id": org_id } });
+      let hierarchyTSODetails = await dcm_hierarchies.findOne({ where: { "name": "TSO", "dcm_organization_id": org_id } });
+      if (hierarchyDealerDetails.id == contactDetails.dcm_hierarchies_id) {
         mappingOfficer = tso_id;
         responseObj = {
           "mappingOfficer": mappingOfficer,
@@ -422,25 +446,31 @@ registrationController.basicProfileRegistration = async (req, res) => {
           "district": profileObj.dcm_cities_id,
           "pinCode": profileObj.post_code
         };
-      } else if (hierarchyDetails.name == "TSO") {
-        if (mappingDetails.length > 0) {
-          let no_activeSites = await paramsOperations(org_id, contact_id, "Active Sites", valueName);
-          let branches = await branchesContactsParent(dealer_arr);
-          responseObj = {
-            "chooseDealer": dealer_arr,
-            "contractorCategory": tagsId,
-            "noOfActiveSites": no_activeSites,
-            "addressLine1": profileObj.line1,
-            "postOffice": profileObj.line2,
-            "landmark": profileObj.line3,
-            "city": profileObj.city,
-            "state": profileObj.dcm_states_id,
-            "district": profileObj.dcm_cities_id,
-            "pinCode": profileObj.post_code
-          };
+        let contactObj = {
+          approved_by: tso_id
+        };
+        await tempContactRegistration.update(contactObj, { where: { "id": contact_id } })
+        await branchesContactsParent(contactDetails.createdBy);
+      } else if (hierarchyTSODetails.id == contactDetails.dcm_hierarchies_id) {
+        let no_activeSites = await paramsOperations(org_id, contact_id, "Active Sites", valueName);
+        let branches = [];
+        for(let i=0;i<dealer_arr.length;i++) {
+          await branchesContactsParent(dealer_arr[i]);
         }
+        responseObj = {
+          "chooseDealer": dealer_arr,
+          "contractorCategory": tagsId,
+          "noOfActiveSites": no_activeSites,
+          "addressLine1": profileObj.line1,
+          "postOffice": profileObj.line2,
+          "landmark": profileObj.line3,
+          "city": profileObj.city,
+          "state": profileObj.dcm_states_id,
+          "district": profileObj.dcm_cities_id,
+          "pinCode": profileObj.post_code
+        };
+        await create_zone_contact_mapping();
       } else {
-
       }
       commonResObj(res, 200, { basicProfileDetails: responseObj });
     } else {
@@ -459,7 +489,6 @@ registrationController.addProfileRegistration = async (req, res) => {
     const value_pan = req.body.pan ? req.body.pan : '';
     const value_m_status = req.body.marital_status ? req.body.marital_status : '';
     const value_sp_name = req.body.spouse_name ? req.body.spouse_name : '';
-    const is_verified = req.body.is_verified ? req.body.is_verified : '0'
     let date_create = new Date().toISOString();
     const value_sp_brthday = req.body.spouse_birthday ? req.body.spouse_birthday : '';
     const value_m_anniv = req.body.marraige_anniversary ? req.body.marraige_anniversary : '';
@@ -472,9 +501,8 @@ registrationController.addProfileRegistration = async (req, res) => {
       value: value_pan,
       dcm_group_members_id: grpMemberId,
       created_at: date_create,
-      is_verified: '1',
-      created_by: contact_id,
-      is_verified: is_verified
+      is_verified: '0',
+      created_by: contact_id
     }
     let pan = "";
     let grpInfoDetails = await dcm_groupMembersInfo.findOne({ where: { "dcm_contacts_id": contact_id, "dcm_group_members_id": grpMemberId } })
