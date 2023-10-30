@@ -300,18 +300,7 @@ registrationController.tempRegistration = async (req, res) => {
         let groupMembrsObj_Res = await dcm_groupMembersInfo.create(groupMembrsObj);
       }
 
-      // let pramsValuesObj = {
-      //   dcm_param_master_id: paramsMasterIds.Adani_AdaniLoyalty_gender_paramId,
-      //   value: req.body.gender, // => contact table 
-      //   dcm_contacts_id: responseObjContact.id,
-      //   created_at: date_create,
-      //   is_verified: '1',
-      //   verified_by: responseObjContact.id
-      // }
-      // let pramsValuesObj_Res = await paramsValue.create(pramsValuesObj);
       // ======================================>  TO BE STORED IN dcm_company
-
-
       let companiesObj = {
         name: (req.body.company_establishment_name) ? req.body.company_establishment_name : '',
         is_active: '1',
@@ -331,11 +320,10 @@ registrationController.tempRegistration = async (req, res) => {
       let ompaniesObj_Ress1 = await dcm_contactCompanies.create(Obj)
 
       //=====================================>  TO BE STORED IN  dcm_phones
-    //const [data,result] = await dbConn.sequelize.query("SELECT * FROM amb_contact_tag_mapping CROSS JOIN amb_tags ON amb_tags.id = amb_contact_tag_mapping.amb_tags_id WHERE  amb_contact_tag_mapping.dcm_contact_id = ?", { replacements: [parent_id], })
     
     //query("select gm.id as id from dcm_group_members gm join dcm_groups g on (gm.master_groups_id = g.id) where g.name = 'Phone Type' and LOWER(gm.name) = '" . strtolower($as_group_mem) . "'")->row()->id;
     
-    let dcmgrpId  = await dbConn.sequelize.query("select gm.id as id from dcm_group_members gm join dcm_groups g on (gm.master_groups_id = g.id) where g. name = 'Phone Type' and LOWER(gm.name) = 'mobile'" )
+    let [dcmgrpId,data]  = await dbConn.sequelize.query("select gm.id as id from dcm_group_members gm join dcm_groups g on (gm.master_groups_id = g.id) where g. name = 'Phone Type' and LOWER(gm.name) = 'mobile'" )
     console.log("dcmgrpIddcmgrpIddcmgrpId" , dcmgrpId)
       let tempRegPhoneObj = {
         number: (req.body.mobile_number) ? req.body.mobile_number : '',
