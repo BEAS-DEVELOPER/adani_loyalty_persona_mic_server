@@ -66,9 +66,6 @@ module.exports = (sequelize, DataTypes) => {
         dcm_hierarchies_id: {
             type: DataTypes.INTEGER
         },
-        createdby_hierarchies_id:{
-            type: DataTypes.INTEGER
-        },
         is_verified: {
             type: DataTypes.STRING
         },

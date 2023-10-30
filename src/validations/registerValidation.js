@@ -2,6 +2,7 @@
 const ApiError = require('../../middleWares/errors/ApiError')
 const registrationSchema = require('../schemas/registrationSchema');
 
+
 require("dotenv").config( );
 
 
@@ -11,6 +12,7 @@ const registrationValidation={
 }
 
 registrationValidation._tempRegist =  async(req,res,next) =>{
+
   
       if(ApiError.checkBody(req,res)){
          if(ApiError.checkUserHierarchy(req,res)){
