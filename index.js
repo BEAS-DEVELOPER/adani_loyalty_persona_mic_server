@@ -21,6 +21,7 @@ app.use("/apiDoc/adani_microservic_1", swaggerUI.serve, swaggerUI.setup(adminser
 // SERVICES BASE URL
 const registrationProfileNode_baseUrl = process.env.registrationProfileNode_baseUrl;
 const masterNodebaseUrl = process.env.masterNode_baseUrl;
+const loginAuthNode_baseUrl = process.env.loginAuthNode_baseUrl;
 
 // REGISTRATION  ROUTES
 const masterRoute = require('./src/routes/masterRoute');
@@ -35,7 +36,7 @@ app.use("/server", (req, res) => {
 
 // registrationProfileNode ROUTES  EXECUTIONS 
 app.use(registrationProfileNode_baseUrl, registrationRoute); //   REGISTRATION  ROUTER
-app.use(registrationProfileNode_baseUrl, passport.authenticate('jwt', { session: false }), authnRoute);
+app.use(loginAuthNode_baseUrl, passport.authenticate('jwt', { session: false }), authnRoute);
 app.use(masterNodebaseUrl, masterRoute);
 
 

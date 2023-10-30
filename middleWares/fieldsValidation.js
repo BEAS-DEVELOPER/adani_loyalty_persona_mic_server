@@ -32,7 +32,7 @@ const FildsValidation=(req , res , apiFor)=>{
                                     marital_status : joi.string().valid('Married','Single').required(), /// will applied on addition aprfile
                                     company_establishment_name : joi.string().required(),
                                     GSTN   : joi.string().required(),
-                                    organization_Id: joi.string().required(),
+                                    organization_Id: joi.number().required(),
                                     sap_code:joi.string().allow(null),
                                     is_approved:joi.number().allow(null),
                                     approved_by:joi.number().allow(null),
@@ -57,7 +57,7 @@ const FildsValidation=(req , res , apiFor)=>{
                                     marital_status : joi.string().valid('Married','Single').required(), /// will applied on addition aprfile
                                     company_establishment_name : joi.string().required(),
                                     GSTN   : joi.string().required(),
-                                    organization_Id: joi.string().required(),
+                                    organization_Id: joi.number().required(),
                                     sap_code:joi.string().allow(null),
                                     is_approved:joi.number().allow(null),
                                     approved_by:joi.number().allow(null),
@@ -84,7 +84,7 @@ const FildsValidation=(req , res , apiFor)=>{
                                     marital_status : joi.string().valid('Married','Single').required(), /// will applied on addition aprfile
                                     company_establishment_name : joi.string().required(),
                                     GSTN   : joi.string().required(),
-                                    organization_Id: joi.string().required(),
+                                    organization_Id: joi.number().required(),
                                     sap_code:joi.string().allow(null),
                                     is_approved:joi.number().allow(null),
                                     approved_by:joi.number().allow(null),
@@ -110,7 +110,7 @@ const FildsValidation=(req , res , apiFor)=>{
                                     marital_status : joi.string().valid('Married','Single').required(), /// will applied on addition aprfile
                                     company_establishment_name : joi.string().required(),
                                     GSTN   : joi.string().required(),
-                                    organization_Id: joi.string().required(),
+                                    organization_Id: joi.number().required(),
                                     sap_code:joi.string().allow(null),
                                     is_approved:joi.number().allow(null),
                                     approved_by:joi.number().allow(null),
@@ -136,7 +136,7 @@ const FildsValidation=(req , res , apiFor)=>{
                                     marital_status : joi.string().valid('Married','Single').required(), /// will applied on addition aprfile
                                     company_establishment_name : joi.string().required(),
                                     GSTN   : joi.string().required(),
-                                    organization_Id: joi.string().required(),
+                                    organization_Id: joi.number().required(),
                                     sap_code:joi.string().allow(null),
                                     is_approved:joi.number().allow(null),
                                     approved_by:joi.number().allow(null),
@@ -160,7 +160,7 @@ const FildsValidation=(req , res , apiFor)=>{
                                     marital_status : joi.string().valid('Married','Single').required(), /// will applied on addition aprfile
                                     company_establishment_name : joi.string().required(),
                                     GSTN   : joi.string().required(),
-                                    organization_Id: joi.string().required(),
+                                    organization_Id: joi.number().required(),
                                     sap_code:joi.string().allow(null),
                                     is_approved:joi.number().allow(null),
                                     approved_by:joi.number().allow(null),

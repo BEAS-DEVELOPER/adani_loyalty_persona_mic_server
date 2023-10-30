@@ -129,11 +129,11 @@ module.exports = (sequelize, DataTypes) => {
 
         //__________________________
         id_extern01:{
-            type: DataTypes.STRING,
-            references: {
-                model: 'dcm_sale_data', 
-                key: 'id_extern01'
-            }
+            type: DataTypes.STRING
+            // references: {
+            //     model: 'dcm_sale_data', 
+            //     key: 'id_extern01'
+            // }
         },
         designation:{
             type: DataTypes.STRING

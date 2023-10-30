@@ -108,7 +108,7 @@ db.sf_guard_user.hasOne(db.tempContactRegistration, { foreignKey: "id" })
 // db.tempContactRegistration.hasMany(db.sf_guard_user, { foreignKey: "id" })
 db.tempContactRegistration.hasMany(db.organization, { foreignKey: "id" })
 db.tempContactRegistration.hasMany(db.dcm_languages, { foreignKey: "id" })
-db.tempContactRegistration.hasMany(db.dcm_salesData, { foreignKey: "id_extern01" })
+// db.tempContactRegistration.hasOne(db.dcm_salesData, { foreignKey: "id_extern01" })
 
 
 db.sequelize.sync({ force: false })
