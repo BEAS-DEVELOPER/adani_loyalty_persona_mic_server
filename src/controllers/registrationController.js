@@ -13,11 +13,11 @@ const hyrarchiesIds = require('../../config/dcm_hierarchyIds')
 // const refreshJwtService = require('../../../services/refreshJwtService')
 const crypto = require('crypto')
 
-const { basicProfile, tempContactRegistration, tempPhoneRegistration, tempEmailRegistration, 
+const { basicProfile, tempContactRegistration, tempPhoneRegistration, tempEmailRegistration,
   parentChildMapping, organization, paramsMaster, paramsValue, companies, ambContactTagMap, userFile,
   dcm_groups, dcm_groupMembers, dcm_groupMembersInfo, dcm_hierarchies, dcm_salesData, ambPanDeclarationLog,
-  sf_guard_user , dcm_contactCompanies
-   
+  sf_guard_user, dcm_contactCompanies
+
 } = require('../../config/db.config')
 
 const passport = require('passport');
@@ -42,6 +42,20 @@ const registrationController = {
   saleRegistration: {},
   login: {}
 
+}
+
+async function branchesContactsParent(dealer_arr = []) {
+  let branches = [];
+  for (let i = 0; i < dealer_arr.length; i++) {
+    let mapDealerObj = {
+      dealer_id: dealer_arr[i].dealer_id,
+      contractor_id: contact_id,
+      is_active: "1"
+    };
+    let parentChildMap = await parentChildMapping.create(mapDealerObj);
+    branches = dbConn.sequelize.query("SELECT DISTINCT amb_tags.name FROM amb_contact_tag_mapping JOIN amb_tags on amb_tags.id=amb_contact_tag_mapping.amb_tags_id WHERE amb_contact_tag_mapping.dcm_contact_id = ", parentChildMap.dealer_id, " AND amb_tags.is_active = '1' AND amb_contact_tag_mapping.is_active = '1'");
+  }
+  return branches;
 }
 
 async function paramsOperations(org_id, contact_id, master_name, params_value) {
@@ -69,86 +83,86 @@ async function paramsOperations(org_id, contact_id, master_name, params_value) {
   return response;
 }
 
-function matchingHirarachiesIddWith(hyrarchiesId , hirarchyName){
-  console.log("hyrarchiesIdhyrarchiesId" , hyrarchiesId)
-  console.log("hirarchyName" , hirarchyName)
+function matchingHirarachiesIddWith(hyrarchiesId, hirarchyName) {
+  console.log("hyrarchiesIdhyrarchiesId", hyrarchiesId)
+  console.log("hirarchyName", hirarchyName)
   let isSame = false
-  hyrarchiesIds.forEach(obj=>{
-    if(obj.name == hirarchyName && obj.id == hyrarchiesId  ){
+  hyrarchiesIds.forEach(obj => {
+    if (obj.name == hirarchyName && obj.id == hyrarchiesId) {
       isSame = true
     }
   })
   return isSame
 }
 
-function getHirarchyIdsOf(hirarchyIdsOf){
-  hyrarchiesIds.forEach(obj=>{
-    if(obj.name == hirarchyIdsOf){
+function getHirarchyIdsOf(hirarchyIdsOf) {
+  hyrarchiesIds.forEach(obj => {
+    if (obj.name == hirarchyIdsOf) {
       return obj.id
     }
   })
 }
 
 
-function generatePasswordString(){
+function generatePasswordString() {
   let pass = '';
   let str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' + 'abcdefghijklmnopqrstuvwxyz' + '0123456789 ' + '!@#_';
   for (let i = 1; i <= 8; i++) {
-      let char = Math.floor(Math.random()
-          * str.length + 1);
-      pass += str.charAt(char)
+    let char = Math.floor(Math.random()
+      * str.length + 1);
+    pass += str.charAt(char)
   }
   return pass;
 }
 
 
-async function  add_contractor_to_branch(parent_id, contractor_id) { //  parent_id = > created_by_id , contractor_id = > contact_id
-    const [data,result] = await dbConn.sequelize.query("SELECT * FROM amb_contact_tag_mapping CROSS JOIN amb_tags ON amb_tags.id = amb_contact_tag_mapping.amb_tags_id WHERE  amb_contact_tag_mapping.dcm_contact_id = ?", { replacements: [parent_id], })
-      console.log("datadata" , data)
-      let array_push=[]
-      if(data.length > 0){
-        data.forEach(obj=>{
-          array_push.push({
-            'dcm_contact_id' : contractor_id,
-            'amb_tags_id'    : obj.amb_tags_id,
-            'is_active'      : 1
-          })
-        })
-        if(array_push.length > 0){
-          const bulkCreated = await ambContactTagMap.bulkCreate(array_push);
-          console.log("__________________bulkCreated" , bulkCreated)
-        }
-      }
-      return array_push;
+async function add_contractor_to_branch(parent_id, contractor_id) { //  parent_id = > created_by_id , contractor_id = > contact_id
+  const [data, result] = await dbConn.sequelize.query("SELECT * FROM amb_contact_tag_mapping CROSS JOIN amb_tags ON amb_tags.id = amb_contact_tag_mapping.amb_tags_id WHERE  amb_contact_tag_mapping.dcm_contact_id = ?", { replacements: [parent_id], })
+  console.log("datadata", data)
+  let array_push = []
+  if (data.length > 0) {
+    data.forEach(obj => {
+      array_push.push({
+        'dcm_contact_id': contractor_id,
+        'amb_tags_id': obj.amb_tags_id,
+        'is_active': 1
+      })
+    })
+    if (array_push.length > 0) {
+      const bulkCreated = await ambContactTagMap.bulkCreate(array_push);
+      console.log("__________________bulkCreated", bulkCreated)
+    }
+  }
+  return array_push;
 }
 
-function generateEmailVefificationCode(email){
-   //md5code  let md5code = md5(email)
-   return  crypto.createHash('md5').update(email).digest("hex")
+function generateEmailVefificationCode(email) {
+  //md5code  let md5code = md5(email)
+  return crypto.createHash('md5').update(email).digest("hex")
 
-    // return code64
+  // return code64
 }
 
 registrationController.tempRegistration = async (req, res) => {
   try {
 
     // CHECKING MOBILE NUMBER AND EMAAIL ADDRESS 
-    let isEmailExist   = await tempEmailRegistration.findOne({ where: {email_address : req.body.email_address } });
+    let isEmailExist = await tempEmailRegistration.findOne({ where: { email_address: req.body.email_address } });
     let isContactExist = await tempPhoneRegistration.findOne({ where: { number: req.body.mobile_number } });
 
-    let emailContactErrObj={} ; 
+    let emailContactErrObj = {};
     let errEmailConatct = false
 
-    if(isEmailExist != null){
-      emailContactErrObj.email_address="Email already taken, please try with another email" ; errEmailConatct = true
+    if (isEmailExist != null) {
+      emailContactErrObj.email_address = "Email already taken, please try with another email"; errEmailConatct = true
     }
-    if(isContactExist  != null){
-      emailContactErrObj.mobile_number="Mobile number already taken, please try with another mobile number" ; errEmailConatct = true
+    if (isContactExist != null) {
+      emailContactErrObj.mobile_number = "Mobile number already taken, please try with another mobile number"; errEmailConatct = true
     }
-    if(errEmailConatct == true){
-      commonResObj(res, 409 , { error: emailContactErrObj })
+    if (errEmailConatct == true) {
+      commonResObj(res, 409, { error: emailContactErrObj })
     }
-    else{
+    else {
 
       // MOBILE NUMBER AND EMAIL ID IS CHECKED , NOT IN DB  , CAN BE PROCEED FOR FURTHER PROCESS
 
@@ -158,31 +172,31 @@ registrationController.tempRegistration = async (req, res) => {
 
       //========================================> TO BE STORED IN dcm_contacts
       let tempRegContactsObj = {
-       
-        first_name:req.body.full_name.split(' ')[0] ,
-        middle_name:req.body.full_name.split(' ').length>3?req.body.full_name.split(' ')[1]:'',
-        last_name: req.body.full_name.split(' ').length>3?req.body.full_name.split(' ')[2]:req.body.full_name.split(' ')[1],
+
+        first_name: req.body.full_name.split(' ')[0],
+        middle_name: req.body.full_name.split(' ').length > 3 ? req.body.full_name.split(' ')[1] : '',
+        last_name: req.body.full_name.split(' ').length > 3 ? req.body.full_name.split(' ')[2] : req.body.full_name.split(' ')[1],
         gender: (req.body.gender) ? req.body.gender : '',
         date_of_birth: (req.body.date_of_birth) ? req.body.gender : '',
         created_at: date_create,
         dcm_organization_id: req.body.organization_Id,
-        dcm_hierarchies_id : req.body.hierarchies_id,
-        created_by:req.body.created_by,
-        id_extern01: req.body.mobile_number ,
-        designation : 'Not Mentioned',
-        is_approved:(req.body.is_verified == null)?'0':req.body.is_verified,
-        approved_by: (req.body.verified_by == null)?'0':req.body.verified_by,
-        approved_at: (req.body.verified_by == null)?'0':req.body.verified_at,
-        dcm_languages_id :(req.body.dcm_languages_id == null)?'1':req.body.dcm_languages_id,
-        can_redeem : (req.body.can_redeem == null)?1:req.body.can_redeem,
+        dcm_hierarchies_id: req.body.hierarchies_id,
+        created_by: req.body.created_by,
+        id_extern01: req.body.mobile_number,
+        designation: 'Not Mentioned',
+        is_approved: (req.body.is_verified == null) ? '0' : req.body.is_verified,
+        approved_by: (req.body.verified_by == null) ? '0' : req.body.verified_by,
+        approved_at: (req.body.verified_by == null) ? '0' : req.body.verified_at,
+        dcm_languages_id: (req.body.dcm_languages_id == null) ? '1' : req.body.dcm_languages_id,
+        can_redeem: (req.body.can_redeem == null) ? 1 : req.body.can_redeem,
         enrollment_date: moment(date_create).format('YYYY-MM-DD'), // yyyy-mm-dd
         is_deleted: '0',
-  
+
       };
 
-    //=============================>   MATCHING COMING HIRARCHYIES ID IN PAYLOAD WITH SYSEM HYRARCHIRES ID
-  
-      if(islogin && matchingHirarachiesIddWith(req.body.dcm_hierarchies_id ,'TSO')) {
+      //=============================>   MATCHING COMING HIRARCHYIES ID IN PAYLOAD WITH SYSEM HYRARCHIRES ID
+
+      if (islogin && matchingHirarachiesIddWith(req.body.dcm_hierarchies_id, 'TSO')) {
         // $modified_datacontact['created_by'] = $register_by_contact_id;
         tempRegContactsObj.created_by = req.body.created_by
         // $modified_datacontact['is_approved'] = '1';
@@ -193,8 +207,8 @@ registrationController.tempRegistration = async (req, res) => {
         tempRegContactsObj.can_redeem = '0'
         // $modified_datacontact['approved_by'] = $register_by_contact_id;
         tempRegContactsObj.approved_by = req.body.created_by
-  
-      }else if(islogin && matchingHirarachiesIddWith(req.body.dcm_hierarchies_id ,'Dealer')){
+
+      } else if (islogin && matchingHirarachiesIddWith(req.body.dcm_hierarchies_id, 'Dealer')) {
         // $modified_datacontact['created_by'] = $register_by_contact_id;
         tempRegContactsObj.created_by = req.body.created_by
         // $modified_datacontact['is_approved'] = '0';
@@ -205,40 +219,40 @@ registrationController.tempRegistration = async (req, res) => {
         tempRegContactsObj.can_redeem = '0'
         // $modified_datacontact['approved_by'] = $this->input->post('tso_id');
         // tempRegContactsObj.approved_by = getHirarchyIdsOf('TSO') ################################   WILL UPDATED LATER ON BY DEEP
-      }else{
+      } else {
         // $modified_datacontact['is_approved'] = '0';
-          tempRegContactsObj.is_approved = '0'
+        tempRegContactsObj.is_approved = '0'
       }
-  
+
       let responseObjContact = await tempContactRegistration.create(tempRegContactsObj);
-      if(responseObjContact.id){ // contact_id
-        await tempContactRegistration.update({ id_extern01: 'AMB_'+responseObjContact.id }, {
+      if (responseObjContact.id) { // contact_id
+        await tempContactRegistration.update({ id_extern01: 'AMB_' + responseObjContact.id }, {
           where: {
             id: responseObjContact.id,
           },
         });
       }
-      
-      let branch_id = await add_contractor_to_branch(req.body.created_by,responseObjContact.id) // responseObjContact.id => dcm_contact_id
-      console.log("___________________branch_id" , branch_id)
-  
+
+      let branch_id = await add_contractor_to_branch(req.body.created_by, responseObjContact.id) // responseObjContact.id => dcm_contact_id
+      console.log("___________________branch_id", branch_id)
+
       // ========================>  TO BE STORED IN sf_guard_user
       let hashPassword = await bcrypt.hash(generatePasswordString(), 10)  // _________________TO STORE PASSWORD
       let user_array = { // CREATING PASSWORD OBJ
-          'username' : 'AMB_'+responseObjContact.id,
-          'password' : hashPassword,
-          'dcm_organization_id' : responseObjContact.dcm_organization_id,
-          'is_active' : 1,
-          'created_at' : moment(date_create).format("YYYY-MM-DD HH:MM:SS"),
-          'dcm_contacts_id': responseObjContact.id,
-          'dcm_hierarchies_id' :responseObjContact.dcm_hierarchies_id,
-          'force_pass_chaged': '1'
+        'username': 'AMB_' + responseObjContact.id,
+        'password': hashPassword,
+        'dcm_organization_id': responseObjContact.dcm_organization_id,
+        'is_active': 1,
+        'created_at': moment(date_create).format("YYYY-MM-DD HH:MM:SS"),
+        'dcm_contacts_id': responseObjContact.id,
+        'dcm_hierarchies_id': responseObjContact.dcm_hierarchies_id,
+        'force_pass_chaged': '1'
       }
-      let inserTedPassword = await sf_guard_user.create(user_array); 
-      console.log("insertedPassword" , inserTedPassword)
-  
-     
-  
+      let inserTedPassword = await sf_guard_user.create(user_array);
+      console.log("insertedPassword", inserTedPassword)
+
+
+
       // ========================  TO BE STORED IN dcm_groupMembersInfo
       let groupMembrsObj = {
         dcm_contacts_id: responseObjContact.id,
@@ -262,7 +276,7 @@ registrationController.tempRegistration = async (req, res) => {
         groupMembrsObj.value = req.body.GSTN
         let groupMembrsObj_Res = await dcm_groupMembersInfo.create(groupMembrsObj);
       }
-  
+
       // let pramsValuesObj = {
       //   dcm_param_master_id: paramsMasterIds.Adani_AdaniLoyalty_gender_paramId,
       //   value: req.body.gender, // => contact table 
@@ -280,33 +294,33 @@ registrationController.tempRegistration = async (req, res) => {
         is_active: '1',
         dcm_organization_id: req.body.organization_Id,
         dcm_company_groups_id: groupMembersIds.dcm_company_groups_id,
-        company_type: groupMembersIds.company_type 
+        company_type: groupMembersIds.company_type
       }
       let companiesObj_Ress1 = await companies.create(companiesObj);
 
 
       // ======================================>  TO BE STORED IN dcm_contacts_compnies
-      let Obj={
-          designation:"Not mentioned",
-          dcm_companies_id: companiesObj_Ress1.id,
-          dcm_contacts_id : responseObjContact.id
+      let Obj = {
+        designation: "Not mentioned",
+        dcm_companies_id: companiesObj_Ress1.id,
+        dcm_contacts_id: responseObjContact.id
       }
-      let  ompaniesObj_Ress1 = await dcm_contactCompanies.create(Obj)
-          
+      let ompaniesObj_Ress1 = await dcm_contactCompanies.create(Obj)
+
       //=====================================>  TO BE STORED IN  dcm_phones
-    //const [data,result] = await dbConn.sequelize.query("SELECT * FROM amb_contact_tag_mapping CROSS JOIN amb_tags ON amb_tags.id = amb_contact_tag_mapping.amb_tags_id WHERE  amb_contact_tag_mapping.dcm_contact_id = ?", { replacements: [parent_id], })
-    
-    //query("select gm.id as id from dcm_group_members gm join dcm_groups g on (gm.master_groups_id = g.id) where g.name = 'Phone Type' and LOWER(gm.name) = '" . strtolower($as_group_mem) . "'")->row()->id;
+      //const [data,result] = await dbConn.sequelize.query("SELECT * FROM amb_contact_tag_mapping CROSS JOIN amb_tags ON amb_tags.id = amb_contact_tag_mapping.amb_tags_id WHERE  amb_contact_tag_mapping.dcm_contact_id = ?", { replacements: [parent_id], })
+
+      //query("select gm.id as id from dcm_group_members gm join dcm_groups g on (gm.master_groups_id = g.id) where g.name = 'Phone Type' and LOWER(gm.name) = '" . strtolower($as_group_mem) . "'")->row()->id;
 
       let tempRegPhoneObj = {
         number: (req.body.mobile_number) ? req.body.mobile_number : '',
         created_at: date_create,
         dcm_contacts_id: responseObjContact.dataValues.id,
-        country_code:'+91',
-        is_verified:'1',
-        dcm_organization_id:req.body.organization_Id,
-        is_default : '1',
-        dcm_group_member_id:''//===========================>???
+        country_code: '+91',
+        is_verified: '1',
+        dcm_organization_id: req.body.organization_Id,
+        is_default: '1',
+        dcm_group_member_id: ''//===========================>???
 
 
       }
@@ -317,14 +331,14 @@ registrationController.tempRegistration = async (req, res) => {
         email_address: (req.body.email_address) ? req.body.email_address : '',
         created_at: date_create,
         dcm_contacts_id: responseObjContact.id,
-        dcm_organization_id:req.body.organization_Id,
-        verification_code:generateEmailVefificationCode()
+        dcm_organization_id: req.body.organization_Id,
+        verification_code: generateEmailVefificationCode()
 
       }
       let responseObjEmail = await tempEmailRegistration.create(tempRegEmailObj);
-     // commonResObj(res, 200, { regContactData: responseObjContact, regPhoneData: responseObjPhone, regEmailData: responseObjEmail });
-        commonResObj(res, 200, {message : 'Temporary registration done successfully'});
-      
+      // commonResObj(res, 200, { regContactData: responseObjContact, regPhoneData: responseObjPhone, regEmailData: responseObjEmail });
+      commonResObj(res, 200, { message: 'Temporary registration done successfully' });
+
     }
   } catch (error) {
     console.log(error)
@@ -342,9 +356,9 @@ registrationController.basicProfileRegistration = async (req, res) => {
     const contact_id = req.body.contact_id ? req.body.contact_id : null;
     const valueName = req.body.active_sites ? req.body.active_sites : '';
     const company_id = req.body.company_id ? req.body.company_id : null
-    const group_members_id = req.body.dcm_group_members_id ? req.body.dcm_group_members_id : null
     const recipient = req.body.recipient ? req.body.recipient : '';
-    const is_default = req.body.is_default ? req.body.is_default : '0';
+    const dealer_arr = req.body.dealer_arr ? req.body.dealer_arr : [];
+    // const is_default = req.body.is_default ? req.body.is_default : '0';
     const country = req.body.country_id ? req.body.country_id : null;
     const address = req.body.address ? req.body.address : '';
     const post_office = req.body.post_office ? req.body.post_office : '';
@@ -358,12 +372,14 @@ registrationController.basicProfileRegistration = async (req, res) => {
     const is_active = req.body.is_active ? req.body.is_active : '1';
     const edit_lock = req.body.edit_lock ? req.body.edit_lock : '0';
     const taluka = req.body.taluka_id ? req.body.taluka_id : null;
+    let dcm_group_members = await dcm_groupMembers.findOne({ where: { "name": "Home Address" } })
+    const group_members_id = dcm_group_members.id;
     let contactDetails = await tempContactRegistration.findOne({ where: { id: contact_id } });
     if (contactDetails) {
       let basicProfileObj = {
         dcm_contacts_id: contact_id,
         recipient: recipient,
-        is_default: is_default,
+        is_default: "1",
         line1: address,
         line2: post_office,
         line3: landmark,
@@ -373,14 +389,9 @@ registrationController.basicProfileRegistration = async (req, res) => {
         dcm_states_id: state,
         dcm_cities_id: district,
         dcm_countries_id: country,
-        address_change_type: address_change_type,
-        address_status: address_status,
-        is_active: is_active,
         created_at: date_create,
         dcm_organization_id: org_id,
-        dcm_companies_id: company_id,
         is_verified: '0',
-        edit_lock: edit_lock,
         dcm_taluka_id: taluka
       };
       let profileObj = {}
@@ -390,18 +401,32 @@ registrationController.basicProfileRegistration = async (req, res) => {
       } else {
         profileObj = basicDetails;
       }
-      let dealerDetails = await tempContactRegistration.findOne({ where: { id: contact_id } });
-      if (dealerDetails) {
-        let no_activeSites = await paramsOperations(org_id, contact_id, "Active Sites", valueName);
-        let contractDetails = await ambContactTagMap.findOne({ where: { "dcm_contact_id": contact_id } });
-        let tagsId = contractDetails.amb_tags_id;
-        let mappingOfficer = "";
-        let responseObj = {};
-        let hierarchyDetails = await dcm_hierarchies.findOne({ where: { "id": hierarchies_id, "dcm_organization_id": org_id } });
-        if (hierarchyDetails.name == "Dealer") {
-          mappingOfficer = tso_id;
+      let no_activeSites = await paramsOperations(org_id, contact_id, "Active Sites", valueName);
+      let contractDetails = await ambContactTagMap.findOne({ where: { "dcm_contact_id": contact_id } });
+      let tagsId = contractDetails.amb_tags_id;
+      let mappingOfficer = "";
+      let responseObj = {};
+      let hierarchyDetails = await dcm_hierarchies.findOne({ where: { "name": "Dealer", "dcm_organization_id": org_id } });
+      if (hierarchyDetails.id == contactDetails.dcm_hierarchies_id) {
+        mappingOfficer = tso_id;
+        responseObj = {
+          "mappingOfficer": mappingOfficer,
+          "contractorCategory": tagsId,
+          "noOfActiveSites": no_activeSites,
+          "addressLine1": profileObj.line1,
+          "postOffice": profileObj.line2,
+          "landmark": profileObj.line3,
+          "city": profileObj.city,
+          "state": profileObj.dcm_states_id,
+          "district": profileObj.dcm_cities_id,
+          "pinCode": profileObj.post_code
+        };
+      } else if (hierarchyDetails.name == "TSO") {
+        if (mappingDetails.length > 0) {
+          let no_activeSites = await paramsOperations(org_id, contact_id, "Active Sites", valueName);
+          let branches = await branchesContactsParent(dealer_arr);
           responseObj = {
-            "mappingOfficer": mappingOfficer,
+            "chooseDealer": dealer_arr,
             "contractorCategory": tagsId,
             "noOfActiveSites": no_activeSites,
             "addressLine1": profileObj.line1,
@@ -412,36 +437,11 @@ registrationController.basicProfileRegistration = async (req, res) => {
             "district": profileObj.dcm_cities_id,
             "pinCode": profileObj.post_code
           };
-        } else if (hierarchyDetails.name == "TSO") {
-          let dealerArr = [];
-          let mappingDetails = await parentChildMapping.findAll({ where: { "contractor_id": contact_id } });
-          if (mappingDetails.length > 0) {
-            let no_activeSites = await paramsOperations(org_id, contact_id, "Active Sites", valueName);
-            let contractDetails = await ambContactTagMap.findOne({ where: { "dcm_contact_id": contact_id } });
-            let tagsId = contractDetails.amb_tags_id;
-            for (let i = 0; i < mappingDetails.length; i++) {
-              dealerArr.push(mappingDetails[i].dealer_id)
-            }
-            responseObj = {
-              "chooseDealer": dealerArr,
-              "contractorCategory": tagsId,
-              "noOfActiveSites": no_activeSites,
-              "addressLine1": profileObj.line1,
-              "postOffice": profileObj.line2,
-              "landmark": profileObj.line3,
-              "city": profileObj.city,
-              "state": profileObj.dcm_states_id,
-              "district": profileObj.dcm_cities_id,
-              "pinCode": profileObj.post_code
-            }
-          }
-        } else {
-
         }
-        commonResObj(res, 200, { basicProfileDetails: responseObj });
       } else {
-        commonResObj(res, 200, { "message": "DCM dealers and contractors not added" });
+
       }
+      commonResObj(res, 200, { basicProfileDetails: responseObj });
     } else {
       commonResObj(res, 200, { "message": "DCM Contacts not found" });
     }
