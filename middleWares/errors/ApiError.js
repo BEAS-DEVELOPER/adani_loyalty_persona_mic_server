@@ -14,6 +14,7 @@ const  ApiErrors= {
     checkError:{},
     checkUserAccessForTemReg:{},
     checkUserHierarchy:{},
+   
 }
 
 
@@ -38,7 +39,7 @@ ApiErrors.checkBody = (req,res)=>{
 }
 
 ApiErrors.checkUserAccessForTemReg  = ( req , res )=>{
-    if(req.body.createdby_hierarchies_id == ''){
+    if(req.body.createdby_hierarchies_id === ''){
         commonResObj(res,412,{validationErrors:{createdby_hierarchies_id:`please provide createdby_hierarchies_id`}})
     }else{
 
@@ -53,6 +54,7 @@ ApiErrors.checkUserAccessForTemReg  = ( req , res )=>{
             {  hirarchyId : 6 , name : 'Engineer', access: true },
             {  hirarchyId : 7 , name : 'TSO',access: false },
         ]
+        // will go insie tbale
 
         accessHirarchyId.forEach(role=>{
             if((role.hirarchyId == req.body.createdby_hierarchies_id) && (role.access == true)){

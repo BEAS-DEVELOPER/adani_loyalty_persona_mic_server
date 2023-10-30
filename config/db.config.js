@@ -79,6 +79,8 @@ db.dcm_groupMembers = require('../src/models/dcm_groupMembersModel')(sequelize, 
 db.dcm_groupMembersInfo = require('../src/models/dcm_groupMembersInfoModel')(sequelize, DataTypes)
 db.dcm_salesData = require('../src/models/dcm_salesDataModel')(sequelize, DataTypes)
 db.ambPanDeclarationLog=require('../src/models/ambPanDeclarationLog')(sequelize, DataTypes)
+db.sf_guard_user=require('../src/models/sfGuardModel')(sequelize, DataTypes)
+db.dcm_contactCompanies=require('../src/models/dcm_contactCompaniesModel')(sequelize, DataTypes)
 
 
 db.dcm_hierarchies.hasMany(db.organization, { foreignKey: "id" })
