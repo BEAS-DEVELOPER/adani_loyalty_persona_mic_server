@@ -40,7 +40,7 @@ module.exports = (sequelize, DataTypes) => {
             }
         },
         dcm_contacts_id:{
-            type: DataTypes.STRING,
+            type: DataTypes.INTEGER,
             references: {
                 model: 'dcm_contacts',
                 key: 'id'

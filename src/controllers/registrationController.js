@@ -98,6 +98,7 @@ function generatePasswordString(){
           * str.length + 1);
       pass += str.charAt(char)
   }
+  console.log("_______________PASSWORD : " , pass)
   return pass;
 }
 
@@ -124,9 +125,9 @@ async function  add_contractor_to_branch(parent_id, contractor_id) { //  parent_
 
 function generateEmailVefificationCode(email){
    //md5code  let md5code = md5(email)
-   return  crypto.createHash('md5').update(email).digest("hex")
+  // console.log(crypto.createHash('md5').update(email).digest("hex"))
 
-    // return code64
+   return  "fdsfsfdfsf55453"//crypto.createHash('md5').update(email).digest("hex")
 }
 
 registrationController.tempRegistration = async (req, res) => {
