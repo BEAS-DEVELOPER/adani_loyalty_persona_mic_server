@@ -17,7 +17,7 @@ const crypto = require('crypto')
 const { basicProfile, tempContactRegistration, tempPhoneRegistration, tempEmailRegistration,
   parentChildMapping, organization, paramsMaster, paramsValue, companies, ambContactTagMap, userFile,
   dcm_groups, dcm_groupMembers, dcm_groupMembersInfo, dcm_hierarchies, dcm_salesData, ambPanDeclarationLog,
-  sf_guard_user, dcm_contactCompanies
+  sf_guard_user, dcm_contactCompanies, dcm_zones, dcm_zoneContactMap
 
 } = require('../../config/db.config')
 
@@ -51,11 +51,26 @@ async function branchesContactsParent(dealer_id, contact_id) {
     contractor_id: contact_id,
     is_active: "1"
   };
-  await parentChildMapping.create(mapDealerObj);
+  let mapDetails = await parentChildMapping.findOne({ where: { "dealer_id": dealer_id, "contractor_id": contact_id, } })
+  if (!mapDetails) {
+    await parentChildMapping.create(mapDealerObj);
+  }
+}
+
+async function getAllDealersTags(contact_id) {
+  let [allDealers, data] = await dbConn.sequelize.query("SELECT dealer_id FROM dcm_contact_parent_child_mapping WHERE contractor_id =?", { replacements: [contact_id] });
+  let branches = [];
+  if (allDealers.length > 0) {
+    for (let i = 0; i < allDealers.length; i++) {
+      let [branch, brdata] = await dbConn.sequelize.query("SELECT DISTINCT amb_tags.name FROM amb_contact_tag_mapping JOIN amb_tags on amb_tags.id=amb_contact_tag_mapping.amb_tags_id WHERE amb_tags.is_active = '1' AND amb_contact_tag_mapping.is_active = '1' AND amb_contact_tag_mapping.dcm_contact_id = ?", { replacements: [allDealers[i].dealer_id] })
+      branches.push(branch[0]);
+    }
+  }
+  return branches.filter((obj, index) => { return index === branches.findIndex(o => obj.name === o.name); });
 }
 
 async function create_zone_contact_mapping(zone_name, contact_id) {
-  let zonemap = await dbConn.sequelize.query("SELECT * FROM dcm_zone_location_mapping JOIN dcm_zones ON dcm_zones.id=dcm_zone_location_mapping.dcm_zone_id WHERE dcm_zones.zone_name= ", zone_name);
+  let [zonemap, dataz] = await dbConn.sequelize.query("SELECT * FROM dcm_zone_location_mapping JOIN dcm_zones ON dcm_zones.id=dcm_zone_location_mapping.dcm_zone_id WHERE dcm_zones.zone_name =?", { replacements: [zone_name] });
   let date_create = new Date().toISOString();
   if (zonemap.length > 0) {
     for (let i = 0; i < zonemap.length; i++) {
@@ -65,7 +80,7 @@ async function create_zone_contact_mapping(zone_name, contact_id) {
         dcm_contact_id: contact_id,
         created_at: date_create
       }
-      let chk = await dbConn.sequelize.query("SELECT * FROM dcm_zone_contact_mapping WHERE dcm_zone_location_mapping_id= ", zoneObj.dcm_zone_location_mapping_id, " AND dcm_zone_id= ", zoneObj.dcm_zone_id, " AND dcm_contact_id= ", zoneObj.dcm_contact_id);
+      let [chk, cdata] = await dbConn.sequelize.query("SELECT * FROM dcm_zone_contact_mapping WHERE dcm_zone_location_mapping_id= ? AND dcm_zone_id= ? AND dcm_contact_id= ?", { replacements: [zoneObj.dcm_zone_location_mapping_id, zoneObj.dcm_zone_id, zoneObj.dcm_contact_id] });
       if (chk.length <= 0) {
         await dcm_zoneContactMap.create(zoneObj);
       } else {
@@ -74,8 +89,7 @@ async function create_zone_contact_mapping(zone_name, contact_id) {
           where: {
             dcm_zone_location_mapping_id: zonemap[i].id,
             dcm_zone_id: zonemap[i].dcm_zone_id,
-            dcm_contact_id: contact_id,
-            created_at: date_create
+            dcm_contact_id: contact_id
           }
         })
       }
@@ -414,7 +428,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
       let responseObj = {};
       let hierarchyDealerDetails = await dcm_hierarchies.findOne({ where: { "name": "Dealer", "dcm_organization_id": org_id } });
       let hierarchyTSODetails = await dcm_hierarchies.findOne({ where: { "name": "TSO", "dcm_organization_id": org_id } });
-      if (hierarchyDealerDetails.id == contactDetails.dcm_hierarchies_id) {
+      if (hierarchyDealerDetails.id == contactDetails.created_by) {
         mappingOfficer = tso_id;
         responseObj = {
           "mappingOfficer": mappingOfficer,
@@ -433,11 +447,27 @@ registrationController.basicProfileRegistration = async (req, res) => {
         };
         await tempContactRegistration.update(contactObj, { where: { "id": contact_id } })
         await branchesContactsParent(contactDetails.createdBy, contact_id);
-      } else if (hierarchyTSODetails.id == contactDetails.dcm_hierarchies_id) {
-        let no_activeSites = await paramsOperations(org_id, contact_id, "Active Sites", valueName);
-        let branches = [];
+        let allDealerBranches = await getAllDealersTags(contact_id);
+        if (allDealerBranches.length > 0) {
+          for (let j = 0; j < allDealerBranches.length; j++) {
+            let zoneDetails = await dcm_zones.findOne({ where: { "zone_name": allDealerBranches[j].name } })
+            if (zoneDetails) {
+              await create_zone_contact_mapping(allDealerBranches[j].name, contact_id);
+            }
+          }
+        }
+      } else if (hierarchyTSODetails.id == contactDetails.created_by) {
         for (let i = 0; i < dealer_arr.length; i++) {
           await branchesContactsParent(dealer_arr[i], contact_id);
+        }
+        let allDealerBranches = await getAllDealersTags(contact_id);
+        if (allDealerBranches.length > 0) {
+          for (let j = 0; j < allDealerBranches.length; j++) {
+            let zoneDetails = await dcm_zones.findOne({ where: { "zone_name": allDealerBranches[j].name } })
+            if (zoneDetails) {
+              await create_zone_contact_mapping(allDealerBranches[j].name, contact_id);
+            }
+          }
         }
         responseObj = {
           "chooseDealer": dealer_arr,
@@ -458,6 +488,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
       commonResObj(res, 200, { "message": "DCM Contacts not found" });
     }
   } catch (error) {
+    console.log(error)
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.basicProfileRegistration", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error })
   }
