@@ -302,18 +302,7 @@ registrationController.tempRegistration = async (req, res) => {
         let groupMembrsObj_Res = await dcm_groupMembersInfo.create(groupMembrsObj);
       }
 
-      // let pramsValuesObj = {
-      //   dcm_param_master_id: paramsMasterIds.Adani_AdaniLoyalty_gender_paramId,
-      //   value: req.body.gender, // => contact table 
-      //   dcm_contacts_id: responseObjContact.id,
-      //   created_at: date_create,
-      //   is_verified: '1',
-      //   verified_by: responseObjContact.id
-      // }
-      // let pramsValuesObj_Res = await paramsValue.create(pramsValuesObj);
       // ======================================>  TO BE STORED IN dcm_company
-
-
       let companiesObj = {
         name: (req.body.company_establishment_name) ? req.body.company_establishment_name : '',
         is_active: '1',
@@ -693,7 +682,6 @@ registrationController.saleRegistration = async (req, res) => {
 
 registrationController.login = async (req, res, next) => {
   try {
-    console.log(1)
     passport.authenticate('local', { session: false }, async function (err, user, info) {
       if (err) { return next(err) }
       if (!user) {
