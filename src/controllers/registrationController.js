@@ -190,7 +190,6 @@ registrationController.tempRegistration = async (req, res) => {
     else {
 
       // MOBILE NUMBER AND EMAIL ID IS CHECKED , NOT IN DB  , CAN BE PROCEED FOR FURTHER PROCESS
-
       let date_create = new Date().toISOString();
       let islogin = true
       let namesArrary = req.body.full_name
@@ -221,31 +220,26 @@ registrationController.tempRegistration = async (req, res) => {
 
       //=============================>   MATCHING COMING HIRARCHYIES ID IN PAYLOAD WITH SYSEM HYRARCHIRES ID
 
-      if (islogin && matchingHirarachiesIddWith(req.body.dcm_hierarchies_id, 'TSO')) {
-        // $modified_datacontact['created_by'] = $register_by_contact_id;
+      if (islogin && matchingHirarachiesIddWith(req.body.hierarchies_id, 'TSO')) {
+
         tempRegContactsObj.created_by = req.body.created_by
-        // $modified_datacontact['is_approved'] = '1';
         tempRegContactsObj.is_approved = '1'
-        // $modified_datacontact['approved_at'] = date('Y-m-d H:i:s');
         tempRegContactsObj.approved_at = moment(date_create).format('YYYY-MM-DD HH:MM:SS')
-        // $modified_datacontact['can_redeem'] = '0';
         tempRegContactsObj.can_redeem = '0'
-        // $modified_datacontact['approved_by'] = $register_by_contact_id;
         tempRegContactsObj.approved_by = req.body.created_by
 
-      } else if (islogin && matchingHirarachiesIddWith(req.body.dcm_hierarchies_id, 'Dealer')) {
-        // $modified_datacontact['created_by'] = $register_by_contact_id;
+
+      } else if (islogin && matchingHirarachiesIddWith(req.body.hierarchies_id, 'Dealer')) {
+
         tempRegContactsObj.created_by = req.body.created_by
-        // $modified_datacontact['is_approved'] = '0';
         tempRegContactsObj.is_approved = '0'
-        // $modified_datacontact['approved_at'] = date('Y-m-d H:i:s');
         tempRegContactsObj.approved_at = moment(date_create).format('YYYY-MM-DD HH:MM:SS')
-        // $modified_datacontact['can_redeem'] = '0';
         tempRegContactsObj.can_redeem = '0'
+
         // $modified_datacontact['approved_by'] = $this->input->post('tso_id');
         // tempRegContactsObj.approved_by = getHirarchyIdsOf('TSO') ################################   WILL UPDATED LATER ON BY DEEP
+
       } else {
-        // $modified_datacontact['is_approved'] = '0';
         tempRegContactsObj.is_approved = '0'
       }
 
@@ -332,13 +326,11 @@ registrationController.tempRegistration = async (req, res) => {
         number: (req.body.mobile_number) ? req.body.mobile_number : '',
         created_at: date_create,
         dcm_contacts_id: responseObjContact.dataValues.id,
-        country_code: '+91',
-        is_verified: '1',
-        dcm_organization_id: req.body.organization_Id,
-        is_default: '1',
-        dcm_group_member_id: 0//===========================>???
-
-
+        country_code:'+91',
+        is_verified:'1',
+        dcm_organization_id:req.body.organization_Id,
+        is_default : '1',
+        dcm_group_member_id:dcmgrpId[0].id//===========================>???
       }
       let responseObjPhone = await tempPhoneRegistration.create(tempRegPhoneObj);
 
