@@ -12,5 +12,7 @@ router.post('/create/states', masterController.createStates);
 router.get('/all/states', masterController.findAllStates);
 router.post('/create/cities', masterController.createCities);
 router.get('/all/cities', masterController.findAllCities);
+router.post('/create/organizations', masterController.createOrganizations);
+router.get('/all/organizations', masterController.findAllOrganizations);
 
 module.exports = router;

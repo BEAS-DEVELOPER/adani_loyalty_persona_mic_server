@@ -1,6 +1,6 @@
 const commonResObj = require('../../middleWares/responses/commonResponse')
 
-const { dcm_hierarchies, dcm_languages, cog_countries, cog_states, cog_cities } = require('../../config/db.config')
+const { dcm_hierarchies, dcm_languages, cog_countries, cog_states, cog_cities, organization } = require('../../config/db.config')
 
 const logger = require('../../supports/logger')
 
@@ -19,7 +19,9 @@ const masterController = {
     createStates: {},
     findAllStates: {},
     createCities: {},
-    findAllCities: {}
+    findAllCities: {},
+    createOrganizations: {},
+    findAllOrganizations: {}
 }
 
 masterController.createLanguages = async (req, res) => {
@@ -183,5 +185,30 @@ masterController.findAllCities = async (req, res) => {
     }
 }
 
+masterController.createOrganizations = async (req, res) => {
+    try {
+        const { name, description } = req.body;
+        let orgObj = {
+            name: name,
+            description: description,
+            is_active: "1"
+        }
+        let org = await organization.create(orgObj);
+        commonResObj(res, 200, { organizationDetails: org });
+    } catch (error) {
+        logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.createOrganizations", error: error, Api: masterServiceUrl + req.url, status: 500 } });
+        commonResObj(res, 500, { error: error })
+    }
+}
+
+masterController.findAllOrganizations = async (req, res) => {
+    try {
+        let all_organization = await organization.findAll();
+        commonResObj(res, 200, { organizationDetails: all_organization });
+    } catch (error) {
+        logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllOrganizations", error: error, Api: masterServiceUrl + req.url, status: 500 } });
+        commonResObj(res, 500, { error: error })
+    }
+}
 
 module.exports = masterController

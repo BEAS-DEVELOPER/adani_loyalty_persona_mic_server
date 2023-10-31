@@ -45,15 +45,13 @@ const registrationController = {
 
 }
 
-async function branchesContactsParent(dealer_id) {
+async function branchesContactsParent(dealer_id, contact_id) {
   let mapDealerObj = {
     dealer_id: dealer_id,
     contractor_id: contact_id,
     is_active: "1"
   };
-  let parentChildMap = await parentChildMapping.create(mapDealerObj);
-  let branch = await dbConn.sequelize.query("SELECT DISTINCT amb_tags.name FROM amb_contact_tag_mapping JOIN amb_tags on amb_tags.id=amb_contact_tag_mapping.amb_tags_id WHERE amb_contact_tag_mapping.dcm_contact_id = ", parentChildMap.dealer_id, " AND amb_tags.is_active = '1' AND amb_contact_tag_mapping.is_active = '1'");
-  return branch;
+  await parentChildMapping.create(mapDealerObj);
 }
 
 async function create_zone_contact_mapping(zone_name, contact_id) {
@@ -326,11 +324,11 @@ registrationController.tempRegistration = async (req, res) => {
         number: (req.body.mobile_number) ? req.body.mobile_number : '',
         created_at: date_create,
         dcm_contacts_id: responseObjContact.dataValues.id,
-        country_code:'+91',
-        is_verified:'1',
-        dcm_organization_id:req.body.organization_Id,
-        is_default : '1',
-        dcm_group_member_id:dcmgrpId[0].id//===========================>???
+        country_code: '+91',
+        is_verified: '1',
+        dcm_organization_id: req.body.organization_Id,
+        is_default: '1',
+        dcm_group_member_id: dcmgrpId[0].id//===========================>???
       }
       let responseObjPhone = await tempPhoneRegistration.create(tempRegPhoneObj);
 
@@ -434,19 +432,12 @@ registrationController.basicProfileRegistration = async (req, res) => {
           approved_by: tso_id
         };
         await tempContactRegistration.update(contactObj, { where: { "id": contact_id } })
-        await branchesContactsParent(contactDetails.createdBy);
+        await branchesContactsParent(contactDetails.createdBy, contact_id);
       } else if (hierarchyTSODetails.id == contactDetails.dcm_hierarchies_id) {
         let no_activeSites = await paramsOperations(org_id, contact_id, "Active Sites", valueName);
         let branches = [];
         for (let i = 0; i < dealer_arr.length; i++) {
-          let mapDealerObj = {
-            dealer_id: dealer_arr[i].dealer_id,
-            contractor_id: dealer_arr[i].contact_id,
-            is_active: "1"
-          };
-          let parentChildMap = await parentChildMapping.create(mapDealerObj);
-          let branch = await dbConn.sequelize.query("SELECT DISTINCT amb_tags.name FROM amb_contact_tag_mapping JOIN amb_tags on amb_tags.id=amb_contact_tag_mapping.amb_tags_id WHERE amb_contact_tag_mapping.dcm_contact_id = ", parentChildMap.dealer_id, " AND amb_tags.is_active = '1' AND amb_contact_tag_mapping.is_active = '1'");
-
+          await branchesContactsParent(dealer_arr[i], contact_id);
         }
         responseObj = {
           "chooseDealer": dealer_arr,
@@ -460,7 +451,6 @@ registrationController.basicProfileRegistration = async (req, res) => {
           "district": profileObj.dcm_cities_id,
           "pinCode": profileObj.post_code
         };
-        await create_zone_contact_mapping();
       } else {
       }
       commonResObj(res, 200, { basicProfileDetails: responseObj });
