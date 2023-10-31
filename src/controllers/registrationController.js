@@ -9,10 +9,10 @@ var md5 = require('js-md5');
 const dbConn = require('../../config/db.config')
 const bcrypt = require('bcryptjs');
 const hyrarchiesIds = require('../../config/dcm_hierarchyIds')
-
+const jwt = require('jsonwebtoken')
 // const JwtService = require('../../../services/JwtService')
 // const refreshJwtService = require('../../../services/refreshJwtService')
-const cryptoJS = require('crypto')
+const crypto = require('crypto')
 
 const { basicProfile, tempContactRegistration, tempPhoneRegistration, tempEmailRegistration,
   parentChildMapping, organization, paramsMaster, paramsValue, companies, ambContactTagMap, userFile,
@@ -56,28 +56,30 @@ async function branchesContactsParent(dealer_id) {
   return branch;
 }
 
-async function create_zone_contact_mapping(zone_name,contact_id){
-  let zonemap=await dbConn.sequelize.query("SELECT * FROM dcm_zone_location_mapping JOIN dcm_zones ON dcm_zones.id=dcm_zone_location_mapping.dcm_zone_id WHERE dcm_zones.zone_name= ",zone_name);
-  let date_create=new Date().toISOString();
-  if(zonemap.length>0) {
-    for(let i=0;i<zonemap.length;i++) {
-      let zoneObj={
-        dcm_zone_location_mapping_id:zonemap[i].id,
-        dcm_zone_id:zonemap[i].dcm_zone_id,
-        dcm_contact_id:contact_id,
-        created_at:date_create
+async function create_zone_contact_mapping(zone_name, contact_id) {
+  let zonemap = await dbConn.sequelize.query("SELECT * FROM dcm_zone_location_mapping JOIN dcm_zones ON dcm_zones.id=dcm_zone_location_mapping.dcm_zone_id WHERE dcm_zones.zone_name= ", zone_name);
+  let date_create = new Date().toISOString();
+  if (zonemap.length > 0) {
+    for (let i = 0; i < zonemap.length; i++) {
+      let zoneObj = {
+        dcm_zone_location_mapping_id: zonemap[i].id,
+        dcm_zone_id: zonemap[i].dcm_zone_id,
+        dcm_contact_id: contact_id,
+        created_at: date_create
       }
-      let chk=await dbConn.sequelize.query("SELECT * FROM dcm_zone_contact_mapping WHERE dcm_zone_location_mapping_id= ",zoneObj.dcm_zone_location_mapping_id," AND dcm_zone_id= ",zoneObj.dcm_zone_id," AND dcm_contact_id= ",zoneObj.dcm_contact_id);
-      if(chk.length<=0) {
+      let chk = await dbConn.sequelize.query("SELECT * FROM dcm_zone_contact_mapping WHERE dcm_zone_location_mapping_id= ", zoneObj.dcm_zone_location_mapping_id, " AND dcm_zone_id= ", zoneObj.dcm_zone_id, " AND dcm_contact_id= ", zoneObj.dcm_contact_id);
+      if (chk.length <= 0) {
         await dcm_zoneContactMap.create(zoneObj);
       } else {
-        let date_update=new Date().toISOString();
-        await dcm_zoneContactMap.update({"updated_at":date_update},{where:{
-          dcm_zone_location_mapping_id:zonemap[i].id,
-          dcm_zone_id:zonemap[i].dcm_zone_id,
-          dcm_contact_id:contact_id,
-          created_at:date_create
-        }})
+        let date_update = new Date().toISOString();
+        await dcm_zoneContactMap.update({ "updated_at": date_update }, {
+          where: {
+            dcm_zone_location_mapping_id: zonemap[i].id,
+            dcm_zone_id: zonemap[i].dcm_zone_id,
+            dcm_contact_id: contact_id,
+            created_at: date_create
+          }
+        })
       }
     }
   }
@@ -162,8 +164,8 @@ async function add_contractor_to_branch(parent_id, contractor_id) { //  parent_i
   return array_push;
 }
 
-function generateEmailVefificationCode(email){
-   return  crypto.createHash('md5').update(email).digest("hex")
+function generateEmailVefificationCode(email) {
+  return crypto.createHash('md5').update(email).digest("hex")
 }
 
 registrationController.tempRegistration = async (req, res) => {
@@ -331,21 +333,21 @@ registrationController.tempRegistration = async (req, res) => {
       let ompaniesObj_Ress1 = await dcm_contactCompanies.create(Obj)
 
       //=====================================>  TO BE STORED IN  dcm_phones
-    //const [data,result] = await dbConn.sequelize.query("SELECT * FROM amb_contact_tag_mapping CROSS JOIN amb_tags ON amb_tags.id = amb_contact_tag_mapping.amb_tags_id WHERE  amb_contact_tag_mapping.dcm_contact_id = ?", { replacements: [parent_id], })
-    
-    //query("select gm.id as id from dcm_group_members gm join dcm_groups g on (gm.master_groups_id = g.id) where g.name = 'Phone Type' and LOWER(gm.name) = '" . strtolower($as_group_mem) . "'")->row()->id;
-    
-    let dcmgrpId  = await dbConn.sequelize.query("select gm.id as id from dcm_group_members gm join dcm_groups g on (gm.master_groups_id = g.id) where g. name = 'Phone Type' and LOWER(gm.name) = 'mobile'" )
-    console.log("dcmgrpIddcmgrpIddcmgrpId" , dcmgrpId)
+      //const [data,result] = await dbConn.sequelize.query("SELECT * FROM amb_contact_tag_mapping CROSS JOIN amb_tags ON amb_tags.id = amb_contact_tag_mapping.amb_tags_id WHERE  amb_contact_tag_mapping.dcm_contact_id = ?", { replacements: [parent_id], })
+
+      //query("select gm.id as id from dcm_group_members gm join dcm_groups g on (gm.master_groups_id = g.id) where g.name = 'Phone Type' and LOWER(gm.name) = '" . strtolower($as_group_mem) . "'")->row()->id;
+
+      let dcmgrpId = await dbConn.sequelize.query("select gm.id as id from dcm_group_members gm join dcm_groups g on (gm.master_groups_id = g.id) where g. name = 'Phone Type' and LOWER(gm.name) = 'mobile'")
+      console.log("dcmgrpIddcmgrpIddcmgrpId", dcmgrpId)
       let tempRegPhoneObj = {
         number: (req.body.mobile_number) ? req.body.mobile_number : '',
         created_at: date_create,
         dcm_contacts_id: responseObjContact.dataValues.id,
-        country_code:'+91',
-        is_verified:'1',
-        dcm_organization_id:req.body.organization_Id,
-        is_default : '1',
-        dcm_group_member_id:dcmgrpId//===========================>???
+        country_code: '+91',
+        is_verified: '1',
+        dcm_organization_id: req.body.organization_Id,
+        is_default: '1',
+        dcm_group_member_id: 0//===========================>???
 
 
       }
@@ -356,8 +358,8 @@ registrationController.tempRegistration = async (req, res) => {
         email_address: (req.body.email_address) ? req.body.email_address : '',
         created_at: date_create,
         dcm_contacts_id: responseObjContact.id,
-        dcm_organization_id:req.body.organization_Id,
-        verification_code:generateEmailVefificationCode(req.body.email_address)
+        dcm_organization_id: req.body.organization_Id,
+        verification_code: generateEmailVefificationCode(req.body.email_address)
 
       }
       let responseObjEmail = await tempEmailRegistration.create(tempRegEmailObj);
@@ -455,8 +457,15 @@ registrationController.basicProfileRegistration = async (req, res) => {
       } else if (hierarchyTSODetails.id == contactDetails.dcm_hierarchies_id) {
         let no_activeSites = await paramsOperations(org_id, contact_id, "Active Sites", valueName);
         let branches = [];
-        for(let i=0;i<dealer_arr.length;i++) {
-          await branchesContactsParent(dealer_arr[i]);
+        for (let i = 0; i < dealer_arr.length; i++) {
+          let mapDealerObj = {
+            dealer_id: dealer_arr[i].dealer_id,
+            contractor_id: dealer_arr[i].contact_id,
+            is_active: "1"
+          };
+          let parentChildMap = await parentChildMapping.create(mapDealerObj);
+          let branch = await dbConn.sequelize.query("SELECT DISTINCT amb_tags.name FROM amb_contact_tag_mapping JOIN amb_tags on amb_tags.id=amb_contact_tag_mapping.amb_tags_id WHERE amb_contact_tag_mapping.dcm_contact_id = ", parentChildMap.dealer_id, " AND amb_tags.is_active = '1' AND amb_contact_tag_mapping.is_active = '1'");
+
         }
         responseObj = {
           "chooseDealer": dealer_arr,
@@ -684,6 +693,7 @@ registrationController.saleRegistration = async (req, res) => {
 
 registrationController.login = async (req, res, next) => {
   try {
+    console.log(1)
     passport.authenticate('local', { session: false }, async function (err, user, info) {
       if (err) { return next(err) }
       if (!user) {

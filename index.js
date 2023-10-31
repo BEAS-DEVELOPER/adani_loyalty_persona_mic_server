@@ -5,11 +5,13 @@ const app = express();
 const path = require("path");
 require('dotenv').config()
 const port = process.env.PORT_NUMBER;
+
+const passport = require('passport')
+require('./passport-config');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors());
-const passport = require('passport')
-require('./passport-config');
+
 
 /*_______________SWAGER_________________*/
 const swaggerUI = require("swagger-ui-express");
@@ -35,8 +37,9 @@ app.use("/server", (req, res) => {
 })
 
 // registrationProfileNode ROUTES  EXECUTIONS 
-app.use(registrationProfileNode_baseUrl, registrationRoute); //   REGISTRATION  ROUTER
-app.use(loginAuthNode_baseUrl, passport.authenticate('jwt', { session: false }), authnRoute);
+ //   REGISTRATION  ROUTER
+app.use(loginAuthNode_baseUrl, authnRoute);
+app.use(registrationProfileNode_baseUrl, registrationRoute);
 app.use(masterNodebaseUrl, masterRoute);
 
 
