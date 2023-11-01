@@ -126,6 +126,9 @@ db.dcm_zoneLocationMap.hasMany(db.cities, { foreignKey: "id" })
 db.dcm_zoneContactMap.hasMany(db.dcm_zoneLocationMap, { foreignKey: "id" })
 db.dcm_zoneContactMap.hasMany(db.dcm_zones, { foreignKey: "id" })
 db.dcm_zoneContactMap.hasMany(db.tempContactRegistration, { foreignKey: "id" })
+db.basicProfile.hasMany(db.countries, { foreignKey: "id" })
+db.basicProfile.hasMany(db.states, { foreignKey: "id" })
+db.basicProfile.hasMany(db.cities, { foreignKey: "id" })
 
 
 db.sequelize.sync({ force: false })

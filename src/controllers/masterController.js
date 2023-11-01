@@ -48,7 +48,7 @@ masterController.findAllLanguages = async (req, res) => {
         let all_languages = await dcm_languages.findAll();
         commonResObj(res, 200, { languageDetails: all_languages });
     } catch (error) {
-        logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.masterLanguages", error: error, Api: masterServiceUrl + req.url, status: 500 } });
+        logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllLanguages", error: error, Api: masterServiceUrl + req.url, status: 500 } });
         commonResObj(res, 500, { error: error })
     }
 }
@@ -80,10 +80,11 @@ masterController.createHierarchies = async (req, res) => {
 
 masterController.findAllHierarchies = async (req, res) => {
     try {
-        let all_hierarchies = await dcm_hierarchies.findAll();
+        let org_id = req.params.org_id;
+        let all_hierarchies = await dcm_hierarchies.findAll({ where: { "dcm_organization_id": org_id } });
         commonResObj(res, 200, { hierarchiesDetails: all_hierarchies });
     } catch (error) {
-        logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.masterHierarchies", error: error, Api: masterServiceUrl + req.url, status: 500 } });
+        logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllHierarchies", error: error, Api: masterServiceUrl + req.url, status: 500 } });
         commonResObj(res, 500, { error: error })
     }
 }

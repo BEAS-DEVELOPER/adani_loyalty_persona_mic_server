@@ -32,13 +32,25 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING
         },
         dcm_countries_id: {
-            type: DataTypes.INTEGER
+            type: DataTypes.INTEGER,
+            references: {
+                model: 'cog_countries', 
+                key: 'id'
+             }
         },
         dcm_states_id: {
-            type: DataTypes.INTEGER
+            type: DataTypes.INTEGER,
+            // references: {
+            //     model: 'cog_states', 
+            //     key: 'id'
+            //  }
         },
         dcm_cities_id: {
-            type: DataTypes.INTEGER
+            type: DataTypes.INTEGER,
+            // references: {
+            //     model: 'cog_cities', 
+            //     key: 'id'
+            //  }
         },
         city: {
             type: DataTypes.STRING

@@ -4,7 +4,7 @@ const masterController = require('../controllers/masterController');
 
 router.get('/all/languages', masterController.findAllLanguages);
 router.post('/create/languages', masterController.createLanguages);
-router.get('/all/hierarchies', masterController.findAllHierarchies);
+router.get('/all/hierarchies/:org_id', masterController.findAllHierarchies);
 router.post('/create/hierarchies', masterController.createHierarchies);
 router.post('/create/countries', masterController.createCountries);
 router.get('/all/countries', masterController.findAllCountries);

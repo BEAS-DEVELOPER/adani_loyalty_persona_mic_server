@@ -62,8 +62,10 @@ async function getAllDealersTags(contact_id) {
   let branches = [];
   if (allDealers.length > 0) {
     for (let i = 0; i < allDealers.length; i++) {
-      let [branch, brdata] = await dbConn.sequelize.query("SELECT DISTINCT amb_tags.name FROM amb_contact_tag_mapping JOIN amb_tags on amb_tags.id=amb_contact_tag_mapping.amb_tags_id WHERE amb_tags.is_active = '1' AND amb_contact_tag_mapping.is_active = '1' AND amb_contact_tag_mapping.dcm_contact_id = ?", { replacements: [allDealers[i].dealer_id] })
-      branches.push(branch[0]);
+      let [branch, brdata] = await dbConn.sequelize.query("SELECT amb_tags.name FROM amb_contact_tag_mapping JOIN amb_tags on amb_tags.id=amb_contact_tag_mapping.amb_tags_id WHERE amb_tags.is_active = '1' AND amb_tags.amb_tag_groups_id = 1 AND amb_contact_tag_mapping.is_active = '1' AND amb_contact_tag_mapping.dcm_contact_id = ?", { replacements: [allDealers[i].dealer_id] })
+      if (branch.length > 0) {
+        branches.push(branch[0]);
+      }
     }
   }
   return branches.filter((obj, index) => { return index === branches.findIndex(o => obj.name === o.name); });
@@ -422,7 +424,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
         profileObj = basicDetails;
       }
       let no_activeSites = await paramsOperations(org_id, contact_id, "Active Sites", valueName);
-      let contractDetails = await ambContactTagMap.findOne({ where: { "dcm_contact_id": contact_id } });
+      let contractDetails = await ambContactTagMap.findOne({ where: { "dcm_contact_id": contact_id, "amb_tag_groups_id": 2 } });
       let tagsId = contractDetails.amb_tags_id;
       let mappingOfficer = "";
       let responseObj = {};
