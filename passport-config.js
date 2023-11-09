@@ -1,4 +1,4 @@
-const { sfGuardUser } = require('./config/db.config')
+const { sf_guard_user } = require('./config/db.config')
 const passport = require('passport');
 const passportJWT = require("passport-jwt");
 const bcrypt = require('bcryptjs');
@@ -12,7 +12,7 @@ passport.use(new LocalStrategy({
     passwordField: 'password'
 },
     async function (username, password, done) {
-        return await sfGuardUser.findOne({ where: { "username": username } })
+        return await sf_guard_user.findOne({ where: { "username": username } })
             .then(user => {
                 if (!user) { return done(null, false, { message: 'Username is wrong' }); }
                 else {
@@ -36,7 +36,7 @@ passport.use(new JWTStrategy({
     secretOrKey: `${process.env.jwt_secret}`
 },
     async function (jwtPayload, cb) {
-        await sfGuardUser.findOne({ where: { "id": jwtPayload.sub } })
+        await sf_guard_user.findOne({ where: { "id": jwtPayload.sub } })
             .then(user => {
                 return cb(null, user);
             })
