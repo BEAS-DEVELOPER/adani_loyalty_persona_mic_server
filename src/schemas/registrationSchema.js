@@ -3,7 +3,18 @@ const fieldsValidation  =   require('../../middleWares/fieldsValidation');
 
 
 const registerSchema={
-   _tempRegSchema : {}
+   _tempRegSchema : {},
+   _getListOfTSOByBranchSchema:{},
+   _assignUsersTsoSchema:{}
+}
+
+registerSchema._getListOfTSOByBranchSchema =  async(req, res , next) =>{
+   let fields =  await  fieldsValidation(req , res, "_getListOfTSOByBranchSchema")
+   return joi.object(fields).validate(req.body, { abortEarly: false })
+}
+registerSchema._assignUsersTsoSchema =  async(req, res , next) =>{
+   let fields =  await  fieldsValidation(req , res, "_assignUsersTsoSchema")
+   return joi.object(fields).validate(req.body, { abortEarly: false })
 }
 
 registerSchema._tempRegSchema =  async(req, res , next) =>{

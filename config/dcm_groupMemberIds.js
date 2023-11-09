@@ -7,7 +7,10 @@ const groupMemberIds ={
 
     // FOR COMAPANY
     "company_type":3,
-    "dcm_company_groups_id":2
+    "dcm_company_groups_id":2,
+
+    // TAG GROUP
+    "tag_Group_Id" :2
 }
 
 module.exports = groupMemberIds

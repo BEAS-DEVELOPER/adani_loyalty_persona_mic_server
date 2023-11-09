@@ -13,7 +13,6 @@ const  ApiErrors= {
     checkBody:{},
     checkError:{},
     checkUserAccessForTemReg:{},
-    checkUserHierarchy:{},
    
 }
 
@@ -41,24 +40,39 @@ ApiErrors.checkBody = (req,res)=>{
 ApiErrors.checkUserAccessForTemReg  = ( req , res )=>{
     if(req.body.createdby_hierarchies_id === ''){
         commonResObj(res,412,{validationErrors:{createdby_hierarchies_id:`please provide createdby_hierarchies_id`}})
+    }else if(req.body.createdby_hierarchies_id  == 0 ){
+
+        let isRoleExist = false;
+        let canSelfReg = false
+        hirarchyIds.forEach(role=>{
+            if((role.id == req.body.hierarchies_id) && (req.body.hierarchies_id != '') ){
+                isRoleExist =true
+                if(role.canRegBy == true)
+                {
+                    canSelfReg = true
+                }
+            }
+        })
+        if(canSelfReg == true){
+            return canSelfReg
+        }else if(isRoleExist == true ){
+            logger.log({ level: "info", message: { fileLocation: "Middlewares/"+filename+" ,ApiErrors.checkUserRole", method:req.method, validationErrors: `role ${req.body.role} is blocked , `, Api :registrationProfileNode_serviceUrl+req.url ,status:412} });
+            commonResObj(res,412,{validationErrors:{hierarchies_id:`Self registration for ${req.body.hierarchies_id} is blocked`}})
+         }else{
+            logger.log({ level: "info", message: { fileLocation: "Middlewares/"+filename+" ,ApiErrors.checkUserRole", method:req.method, validationErrors: `role ${req.body.role} is not exist , `, Api :registrationProfileNode_serviceUrl+req.url ,status:412} });
+            commonResObj(res,412,{validationErrors:{hierarchies_id:`hierarchies_id ${req.body.hierarchies_id} is not exist ,`}})
+        }
+
     }else{
 
         let isAccessVerified = false;
-        let accessHirarchyId=[ 
-            {  hirarchyId : 0 , name : 'self' , access: true},
-            {  hirarchyId : 1 , name : 'Contractor' , access: true},
-            {  hirarchyId : 2 , name : 'Dealer', access: true },
-            {  hirarchyId : 3 , name : 'Retailer',access: true },
-            {  hirarchyId : 4 , name : 'Sales Force', access: true },
-            {  hirarchyId : 5 , name : 'Influencer' , },
-            {  hirarchyId : 6 , name : 'Engineer', access: true },
-            {  hirarchyId : 7 , name : 'TSO',access: false },
-        ]
-        // will go insie tbale
-
-        accessHirarchyId.forEach(role=>{
-            if((role.hirarchyId == req.body.createdby_hierarchies_id) && (role.access == true)){
-                isAccessVerified =true
+        hirarchyIds.forEach(role=>{
+            if((role.id == req.body.hierarchies_id) && (req.body.hierarchies_id != '') ){
+                 role.canRegBy.forEach(obj=>{
+                    if(obj.id == req.body.createdby_hierarchies_id){
+                         isAccessVerified = true;
+                    }
+                })
             }
         })
 
@@ -71,20 +85,6 @@ ApiErrors.checkUserAccessForTemReg  = ( req , res )=>{
    
 }
 
-ApiErrors.checkUserHierarchy  = ( req , res )=>{
-    let isRoleExist = false;
-    hirarchyIds.forEach(role=>{
-        if((role.id == req.body.hierarchies_id) && (req.body.hierarchies_id != '') ){
-            isRoleExist =true
-        }
-    })
-    if(isRoleExist){
-        return isRoleExist
-    }else{
-        logger.log({ level: "info", message: { fileLocation: "Middlewares/"+filename+" ,ApiErrors.checkUserRole", method:req.method, validationErrors: `role ${req.body.role} is not exist , please provide valid role`, Api :registrationProfileNode_serviceUrl+req.url ,status:412} });
-        commonResObj(res,412,{validationErrors:{hierarchies_id:`hierarchies_id ${req.body.hierarchies_id} is not exist , please provide valid hierarchies_id`}})
-    }
-}
 
 
 

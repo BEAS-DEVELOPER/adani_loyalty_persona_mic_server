@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const registrationController = require('../controllers/registrationController');
 const regValidtn = require('../validations/registerValidation');
-// var multer = require('multer');
 
+// var multer = require('multer');
 // var storage = multer.diskStorage({
 //     destination: (req, file, cb) => {
 //         if (file.fieldname == "pan_image") {
@@ -24,6 +24,8 @@ const regValidtn = require('../validations/registerValidation');
 // var uploads = multer({ storage: storage });
 
 router.post('/temporaryRegister', regValidtn._tempRegist, registrationController.tempRegistration) // AS OF NOW TEMPORARY REGISTRATIONS 
+router.post('/list/of/tso/by/branch' ,regValidtn._getListOfTSOByBranch, registrationController.getListOfTSOByBranch)
+router.post('/assign/tso' ,regValidtn._assignUsersTso,registrationController.assignUsersTso)
 // router.post('/basic/profile', registrationController.basicProfileRegistration);
 // router.post('/additional/profile', uploads.fields([{ name: 'pan_image', maxCount: 1 }, { name: 'front_image', maxCount: 1 }, { name: 'back_image', maxCount: 1 }]), registrationController.addProfileRegistration);
 // router.post('/sale/register', registrationController.saleRegistration);

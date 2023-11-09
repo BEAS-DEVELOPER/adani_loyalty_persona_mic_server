@@ -41,7 +41,10 @@ const registrationController = {
   basicProfileRegistration: {},
   addProfileRegistration: {},
   saleRegistration: {},
-  login: {}
+  login: {},
+  getPendingList:{},
+  getListOfTSOByBranch:{},
+  assignUsersTso:{}
 
 }
 
@@ -84,9 +87,11 @@ async function create_zone_contact_mapping(zone_name,contact_id){
 }
 
 async function paramsOperations(org_id, contact_id, master_name, params_value) {
+
   let orgDetails = await organization.findOne({ where: { "id": org_id } });
   let date_create = new Date().toISOString();
   let response = "";
+
   if (params_value.length > 0) {
     if (orgDetails) {
       let masterParamsDetails = await paramsMaster.findOne({ where: { "dcm_organization_id": org_id, "name": master_name } });
@@ -100,7 +105,7 @@ async function paramsOperations(org_id, contact_id, master_name, params_value) {
       let create_param_val = {};
       let paramsValueDetails = await paramsValue.findOne({ where: { "dcm_contacts_id": contact_id, "dcm_param_master_id": masterParam_id } });
       if (!paramsValueDetails) {
-        create_param_val = await paramsValue.create(valObj);
+          create_param_val = await paramsValue.create(valObj);
       }
       response = create_param_val.value;
     }
@@ -109,8 +114,6 @@ async function paramsOperations(org_id, contact_id, master_name, params_value) {
 }
 
 function matchingHirarachiesIddWith(hyrarchiesId, hirarchyName) {
-  console.log("hyrarchiesIdhyrarchiesId", hyrarchiesId)
-  console.log("hirarchyName", hirarchyName)
   let isSame = false
   hyrarchiesIds.forEach(obj => {
     if (obj.name == hirarchyName && obj.id == hyrarchiesId) {
@@ -131,7 +134,7 @@ function getHirarchyIdsOf(hirarchyIdsOf) {
 
 function generatePasswordString() {
   let pass = '';
-  let str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' + 'abcdefghijklmnopqrstuvwxyz' + '0123456789 ' + '!@#_';
+  // let str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' + 'abcdefghijklmnopqrstuvwxyz' + '0123456789 ' + '!@#_';
   for (let i = 1; i <= 8; i++) {
     let char = Math.floor(Math.random()
       * str.length + 1);
@@ -166,6 +169,50 @@ function generateEmailVefificationCode(email){
    return  crypto.createHash('md5').update(email).digest("hex")
 }
 
+registrationController.assignUsersTso = async(req , res )=>{
+  try{
+    let TSO_contactId = req.body.TSO_contactId
+    let userContactId  = req.body.userContactId
+    let data =await tempContactRegistration.update({ "created_by": TSO_contactId }, {
+      where: {
+        id: userContactId
+      }
+    });
+   
+    commonResObj(res, 200, { message: 'User is assigned with new TSO' , Data : data  }); 
+  }catch(error){
+    logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.updateUsersTso", error: error, Api: regServiceUrl + req.url, status: 500 } });
+    commonResObj(res, 500, { error: error })
+  }
+}
+
+registrationController.getListOfTSOByBranch = async(req , res )=>{
+  try{
+    let loginUserHirarchyId = req.body.loginUserHirarchy
+    let tagGroupId          = groupMembersIds.tag_Group_Id
+    let loginUserContactId  = req.body.loginUserContactId
+    let array =[]
+    const [data1, result1] = await dbConn.sequelize.query("SELECT amb_map.* FROM amb_contact_tag_mapping amb_map  JOIN amb_tags tags ON amb_map.amb_tags_id=tags.id  join amb_tag_groups tag_group on tag_group.id = tags.amb_tag_groups_id WHERE amb_map.dcm_contact_id = ? and tag_group.id = ?", { replacements: [loginUserContactId,tagGroupId], })
+    for(let i= 0 ; i< data1.length ; i++){
+     const [data2, result2] = await dbConn.sequelize.query("SELECT con.id as Contact_Id,con.id_extern01 as 'Tso_Code', CONCAT(con.first_name,' ', con.last_name) AS 'Tso_Name', branch.name as 'Branch_Name' FROM dcm_contacts con join amb_contact_tag_mapping ctm ON ctm.dcm_contact_id = con.id JOIN amb_tags branch ON branch.id = ctm.amb_tags_id WHERE branch.id =?  AND con.dcm_hierarchies_id = ? AND con.is_deleted = 0 GROUP BY con.id", { replacements: [data1[i].amb_tags_id,loginUserHirarchyId] })
+     array.push(data2)
+    }
+    commonResObj(res, 200, { message: 'List of TSO fetch successfully' , Data : array  });  
+  }
+  catch(error){
+    logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.getListOfTSOByBranch", error: error, Api: regServiceUrl + req.url, status: 500 } });
+    commonResObj(res, 500, { error: error })
+  }
+
+  
+}
+
+registrationController.getPendingList = async (req, res) => { // list of user to be approved
+    let pendingUsers = await tempEmailRegistration.findAll({ where: { is_approved:0 } });
+    console.log("LIST OF USERS TO BE APPROVED  : " , pendingUsers)
+    commonResObj(res, 200, { message: 'List of users to be approved' , Data : pendingUsers  });  
+}
+
 registrationController.tempRegistration = async (req, res) => {
   try {
 
@@ -177,10 +224,10 @@ registrationController.tempRegistration = async (req, res) => {
     let errEmailConatct = false
 
     if (isEmailExist != null) {
-      emailContactErrObj.email_address = "Email already taken, please try with another email"; errEmailConatct = true
+      emailContactErrObj.email_address = "Email already taken "; errEmailConatct = true
     }
     if (isContactExist != null) {
-      emailContactErrObj.mobile_number = "Mobile number already taken, please try with another mobile number"; errEmailConatct = true
+      emailContactErrObj.mobile_number = "Mobile number already taken"; errEmailConatct = true
     }
     if (errEmailConatct == true) {
       commonResObj(res, 409, { error: emailContactErrObj })
@@ -194,7 +241,6 @@ registrationController.tempRegistration = async (req, res) => {
 
       //========================================> TO BE STORED IN dcm_contacts
       let tempRegContactsObj = {
-
         first_name: req.body.full_name.split(' ')[0],
         middle_name: req.body.full_name.split(' ').length > 3 ? req.body.full_name.split(' ')[1] : '',
         last_name: req.body.full_name.split(' ').length > 3 ? req.body.full_name.split(' ')[2] : req.body.full_name.split(' ')[1],
@@ -240,15 +286,23 @@ registrationController.tempRegistration = async (req, res) => {
       } else {
         tempRegContactsObj.is_approved = '0'
       }
-
       let responseObjContact = await tempContactRegistration.create(tempRegContactsObj);
+
       if (responseObjContact.id) { // contact_id
-        await tempContactRegistration.update({ id_extern01: 'AMB_' + responseObjContact.id }, {
+       let updatedtempContactRegistration =  await tempContactRegistration.update({ id_extern01: 'AMB_' + responseObjContact.id }, {
           where: {
             id: responseObjContact.id,
           },
         });
       }
+      // if createdBy == '' then update it by contactId
+      if (req.body.createdBy == '' || req.body.createdBy == 0 || req.body.createdBy == null ) { // contact_id
+        let updatedCreatedBytempContactRegistration =  await tempContactRegistration.update({ createdBy: responseObjContact.id }, {
+           where: {
+             id: responseObjContact.id,
+           },
+         });
+       }
 
       let branch_id = await add_contractor_to_branch(req.body.created_by, responseObjContact.id) // responseObjContact.id => dcm_contact_id
       console.log("___________________branch_id", branch_id)
@@ -266,7 +320,7 @@ registrationController.tempRegistration = async (req, res) => {
         'force_pass_chaged': '1'
       }
       let inserTedPassword = await sf_guard_user.create(user_array);
-      console.log("insertedPassword", inserTedPassword)
+         console.log("insertedPassword", inserTedPassword)
 
 
 
@@ -315,10 +369,9 @@ registrationController.tempRegistration = async (req, res) => {
 
       //=====================================>  TO BE STORED IN  dcm_phones
     
-    //query("select gm.id as id from dcm_group_members gm join dcm_groups g on (gm.master_groups_id = g.id) where g.name = 'Phone Type' and LOWER(gm.name) = '" . strtolower($as_group_mem) . "'")->row()->id;
     
     let [dcmgrpId,data]  = await dbConn.sequelize.query("select gm.id as id from dcm_group_members gm join dcm_groups g on (gm.master_groups_id = g.id) where g. name = 'Phone Type' and LOWER(gm.name) = 'mobile'" )
-    console.log("dcmgrpIddcmgrpIddcmgrpId" , dcmgrpId)
+      console.log("dcmgrpIddcmgrpIddcmgrpId" , dcmgrpId)
       let tempRegPhoneObj = {
         number: (req.body.mobile_number) ? req.body.mobile_number : '',
         created_at: date_create,
@@ -346,7 +399,6 @@ registrationController.tempRegistration = async (req, res) => {
 
     }
   } catch (error) {
-    console.log(error)
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController._tempRegistartion", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error })
   }
