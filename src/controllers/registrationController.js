@@ -434,7 +434,6 @@ registrationController.basicProfileRegistration = async (req, res) => {
     const company_id = req.body.company_id ? req.body.company_id : null
     const recipient = req.body.recipient ? req.body.recipient : '';
     const dealer_arr = req.body.dealer_arr ? req.body.dealer_arr : [];
-    // const is_default = req.body.is_default ? req.body.is_default : '0';
     const country = req.body.country_id ? req.body.country_id : null;
     const address = req.body.address ? req.body.address : '';
     const post_office = req.body.post_office ? req.body.post_office : '';
@@ -442,7 +441,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
     const city = req.body.city ? req.body.city : '';
     const pin_code = req.body.pin_code ? req.body.pin_code : '';
     const state = req.body.state_id ? req.body.state_id : null;
-    const district = req.body.district_id ? req.body.district_id : null;
+    const district = req.body.city_id ? req.body.city_id : null;
     const address_change_type = req.body.address_change_type ? req.body.address_change_type : '0';
     const address_status = req.body.address_status ? req.body.address_status : '0';
     const is_active = req.body.is_active ? req.body.is_active : '1';
@@ -478,7 +477,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
         profileObj = basicDetails;
       }
       let no_activeSites = await paramsOperations(org_id, contact_id, "Active Sites", valueName);
-      let contractDetails = await ambContactTagMap.findOne({ where: { "dcm_contact_id": contact_id, "amb_tag_groups_id": 2 } });
+      let contractDetails = await ambContactTagMap.findOne({ where: { "dcm_contact_id": contact_id } });
       let tagsId = contractDetails.amb_tags_id;
       let mappingOfficer = "";
       let responseObj = {};
@@ -501,7 +500,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
         let contactObj = {
           approved_by: tso_id
         };
-        await tempContactRegistration.update(contactObj, { where: { "id": contact_id } })
+        await tempContactRegistration.update(contactObj, { where: { "id": contact_id } });
         await branchesContactsParent(contactDetails.createdBy, contact_id);
         let allDealerBranches = await getAllDealersTags(contact_id);
         if (allDealerBranches.length > 0) {
@@ -537,7 +536,32 @@ registrationController.basicProfileRegistration = async (req, res) => {
           "district": profileObj.dcm_cities_id,
           "pinCode": profileObj.post_code
         };
-      } else {
+      } else if (contactDetails.dcm_hierarchies_id == 1) {
+        if (district == '' || state == '') {
+          commonResObj(res, 200, { "message": "State and city are both required" });
+        } else {
+          let tsoDetails = await tempContactRegistration.findOne({ where: { "id": tso_id } });
+          if (tsoDetails) {
+            let contactObj = {
+              approved_by: tso_id
+            };
+            await tempContactRegistration.update(contactObj, { where: { "id": contact_id } });
+            responseObj = {
+              "tso_id": tso_id,
+              "contractorCategory": tagsId,
+              "noOfActiveSites": no_activeSites,
+              "addressLine1": profileObj.line1,
+              "postOffice": profileObj.line2,
+              "landmark": profileObj.line3,
+              "city": profileObj.city,
+              "state": profileObj.dcm_states_id,
+              "district": profileObj.dcm_cities_id,
+              "pinCode": profileObj.post_code
+            };
+          } else {
+            commonResObj(res, 200, { "message": "Please select TSO" });
+          }
+        }
       }
       commonResObj(res, 200, { basicProfileDetails: responseObj });
     } else {
@@ -768,7 +792,7 @@ registrationController.login = async (req, res, next) => {
           subject: `${user.id}`
         }
         const token = jwt.sign(payload, `${process.env.jwt_secret}`, options);
-        commonResObj(res, 200, { message: 'Login Successful', userData: payload, access_token: token })
+        commonResObj(res, 200, { message: 'Login Successfull', userData: payload, access_token: token })
       }
     })(req, res, next);
   } catch (error) {
