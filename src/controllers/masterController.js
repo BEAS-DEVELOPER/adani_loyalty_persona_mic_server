@@ -1,6 +1,6 @@
 const commonResObj = require('../../middleWares/responses/commonResponse')
 const dbConn = require('../../config/db.config')
-const { dcm_hierarchies, dcm_languages, cog_countries, cog_states, cog_cities, organization, ambTags } = require('../../config/db.config')
+const { dcm_hierarchies, dcm_languages, countries, states, cities, organization, ambTags } = require('../../config/db.config')
 
 const logger = require('../../supports/logger')
 
@@ -137,7 +137,7 @@ masterController.createCountries = async (req, res) => {
             iso2_code: iso2_code,
             created_at: date_create
         }
-        let country = await cog_countries.create(countryObj);
+        let country = await countries.create(countryObj);
         commonResObj(res, 200, { countryDetails: country });
     } catch (error) {
         logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.createCountries", error: error, Api: masterServiceUrl + req.url, status: 500 } });
@@ -146,7 +146,7 @@ masterController.createCountries = async (req, res) => {
 }
 masterController.findAllCountries = async (req, res) => {
     try {
-        let all_countries = await cog_countries.findAll();
+        let all_countries = await countries.findAll();
         commonResObj(res, 200, { countriesDetails: all_countries });
     } catch (error) {
         logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllCountries", error: error, Api: masterServiceUrl + req.url, status: 500 } });
@@ -165,9 +165,9 @@ masterController.createStates = async (req, res) => {
             is_active: "1",
             created_at: date_create
         }
-        let countryDetails = await cog_countries.findOne({ where: { "id": stateObj.cog_countries_id } });
+        let countryDetails = await countries.findOne({ where: { "id": stateObj.cog_countries_id } });
         if (countryDetails && countryDetails.has_states == 1) {
-            let state = await cog_states.create(stateObj);
+            let state = await states.create(stateObj);
             commonResObj(res, 200, { stateDetails: state });
         } else {
             commonResObj(res, 200, { cityDetails: "State not added. Please enter correct country id" });
@@ -179,7 +179,7 @@ masterController.createStates = async (req, res) => {
 }
 masterController.findAllStates = async (req, res) => {
     try {
-        let all_states = await cog_states.findAll();
+        let all_states = await states.findAll();
         commonResObj(res, 200, { statesDetails: all_states });
     } catch (error) {
         logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllStates", error: error, Api: masterServiceUrl + req.url, status: 500 } });
@@ -197,10 +197,10 @@ masterController.createCities = async (req, res) => {
             created_at: date_create,
             is_active: "1"
         };
-        let countryDetails = await cog_countries.findOne({ where: { "id": cityObj.cog_countries_id } });
-        let stateDetails = await cog_states.findOne({ where: { "id": cityObj.cog_states_id } });
+        let countryDetails = await countries.findOne({ where: { "id": cityObj.cog_countries_id } });
+        let stateDetails = await states.findOne({ where: { "id": cityObj.cog_states_id } });
         if (countryDetails && (countryDetails.has_states == 1 || countryDetails.has_cities == 1) && stateDetails && stateDetails.has_cities == 1) {
-            let city = await cog_cities.create(cityObj);
+            let city = await cities.create(cityObj);
             commonResObj(res, 200, { cityDetails: city });
         } else {
             commonResObj(res, 200, { cityDetails: "City not added.. Please enter correct country or state id" });
@@ -212,9 +212,10 @@ masterController.createCities = async (req, res) => {
 }
 masterController.findAllCities = async (req, res) => {
     try {
-        let all_cities = await cog_cities.findAll();
+        let all_cities = await cities.findAll();
         commonResObj(res, 200, { citiesDetails: all_cities });
     } catch (error) {
+        console.log(error)
         logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllCities", error: error, Api: masterServiceUrl + req.url, status: 500 } });
         commonResObj(res, 500, { error: error })
     }
