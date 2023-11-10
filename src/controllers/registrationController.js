@@ -42,14 +42,17 @@ const registrationController = {
   addProfileRegistration: {},
   saleRegistration: {},
   login: {},
-
+  getPendingList: {},
+  getListOfTSOByBranch: {},
+  assignUsersTso: {},
   getPendingList:{},
   getListOfTSOByBranch:{},
   assignUsersTso:{},
 
   getUserProfile:{},
-  updateUserProfile:{}
-
+  updateUserProfile:{},
+  
+  logout: {}
 }
 
 async function branchesContactsParent(dealer_id, contact_id) {
@@ -125,7 +128,7 @@ async function paramsOperations(org_id, contact_id, master_name, params_value) {
       let create_param_val = {};
       let paramsValueDetails = await paramsValue.findOne({ where: { "dcm_contacts_id": contact_id, "dcm_param_master_id": masterParam_id } });
       if (!paramsValueDetails) {
-          create_param_val = await paramsValue.create(valObj);
+        create_param_val = await paramsValue.create(valObj);
       }
       response = create_param_val.value;
     }
@@ -187,18 +190,18 @@ function generateEmailVefificationCode(email) {
   return crypto.createHash('md5').update(email).digest("hex")
 }
 
-registrationController.assignUsersTso = async(req , res )=>{
-  try{
+registrationController.assignUsersTso = async (req, res) => {
+  try {
     let TSO_contactId = req.body.TSO_contactId
-    let userContactId  = req.body.userContactId
-    let data =await tempContactRegistration.update({ "created_by": TSO_contactId }, {
+    let userContactId = req.body.userContactId
+    let data = await tempContactRegistration.update({ "created_by": TSO_contactId }, {
       where: {
         id: userContactId
       }
     });
-   
-    commonResObj(res, 200, { message: 'User is assigned with new TSO' , Data : data  }); 
-  }catch(error){
+
+    commonResObj(res, 200, { message: 'User is assigned with new TSO', Data: data });
+  } catch (error) {
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.updateUsersTso", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error })
   }
@@ -264,31 +267,31 @@ registrationController.getUserProfile = async( req , res )=>{
   }
 }
 
-registrationController.getListOfTSOByBranch = async(req , res )=>{
-  try{
+registrationController.getListOfTSOByBranch = async (req, res) => {
+  try {
     let loginUserHirarchyId = req.body.loginUserHirarchy
-    let tagGroupId          = groupMembersIds.tag_Group_Id
-    let loginUserContactId  = req.body.loginUserContactId
-    let array =[]
-    const [data1, result1] = await dbConn.sequelize.query("SELECT amb_map.* FROM amb_contact_tag_mapping amb_map  JOIN amb_tags tags ON amb_map.amb_tags_id=tags.id  join amb_tag_groups tag_group on tag_group.id = tags.amb_tag_groups_id WHERE amb_map.dcm_contact_id = ? and tag_group.id = ?", { replacements: [loginUserContactId,tagGroupId], })
-    for(let i= 0 ; i< data1.length ; i++){
-     const [data2, result2] = await dbConn.sequelize.query("SELECT con.id as Contact_Id,con.id_extern01 as 'Tso_Code', CONCAT(con.first_name,' ', con.last_name) AS 'Tso_Name', branch.name as 'Branch_Name' FROM dcm_contacts con join amb_contact_tag_mapping ctm ON ctm.dcm_contact_id = con.id JOIN amb_tags branch ON branch.id = ctm.amb_tags_id WHERE branch.id =?  AND con.dcm_hierarchies_id = ? AND con.is_deleted = 0 GROUP BY con.id", { replacements: [data1[i].amb_tags_id,loginUserHirarchyId] })
-     array.push(data2)
+    let tagGroupId = groupMembersIds.tag_Group_Id
+    let loginUserContactId = req.body.loginUserContactId
+    let array = []
+    const [data1, result1] = await dbConn.sequelize.query("SELECT amb_map.* FROM amb_contact_tag_mapping amb_map  JOIN amb_tags tags ON amb_map.amb_tags_id=tags.id  join amb_tag_groups tag_group on tag_group.id = tags.amb_tag_groups_id WHERE amb_map.dcm_contact_id = ? and tag_group.id = ?", { replacements: [loginUserContactId, tagGroupId], })
+    for (let i = 0; i < data1.length; i++) {
+      const [data2, result2] = await dbConn.sequelize.query("SELECT con.id as Contact_Id,con.id_extern01 as 'Tso_Code', CONCAT(con.first_name,' ', con.last_name) AS 'Tso_Name', branch.name as 'Branch_Name' FROM dcm_contacts con join amb_contact_tag_mapping ctm ON ctm.dcm_contact_id = con.id JOIN amb_tags branch ON branch.id = ctm.amb_tags_id WHERE branch.id =?  AND con.dcm_hierarchies_id = ? AND con.is_deleted = 0 GROUP BY con.id", { replacements: [data1[i].amb_tags_id, loginUserHirarchyId] })
+      array.push(data2)
     }
-    commonResObj(res, 200, { message: 'List of TSO fetch successfully' , Data : array  });  
+    commonResObj(res, 200, { message: 'List of TSO fetch successfully', Data: array });
   }
-  catch(error){
+  catch (error) {
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.getListOfTSOByBranch", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error })
   }
 
-  
+
 }
 
 registrationController.getPendingList = async (req, res) => { // list of user to be approved
-    let pendingUsers = await tempEmailRegistration.findAll({ where: { is_approved:0 } });
-    console.log("LIST OF USERS TO BE APPROVED  : " , pendingUsers)
-    commonResObj(res, 200, { message: 'List of users to be approved' , Data : pendingUsers  });  
+  let pendingUsers = await tempEmailRegistration.findAll({ where: { is_approved: 0 } });
+  console.log("LIST OF USERS TO BE APPROVED  : ", pendingUsers)
+  commonResObj(res, 200, { message: 'List of users to be approved', Data: pendingUsers });
 }
 
 registrationController.updateUserProfile = async (req, res) => {
@@ -453,20 +456,20 @@ registrationController.tempRegistration = async (req, res) => {
       let responseObjContact = await tempContactRegistration.create(tempRegContactsObj);
 
       if (responseObjContact.id) { // contact_id
-       let updatedtempContactRegistration =  await tempContactRegistration.update({ id_extern01: 'AMB_' + responseObjContact.id }, {
+        let updatedtempContactRegistration = await tempContactRegistration.update({ id_extern01: 'AMB_' + responseObjContact.id }, {
           where: {
             id: responseObjContact.id,
           },
         });
       }
       // if createdBy == '' then update it by contactId
-      if (req.body.createdBy == '' || req.body.createdBy == 0 || req.body.createdBy == null ) { // contact_id
-        let updatedCreatedBytempContactRegistration =  await tempContactRegistration.update({ createdBy: responseObjContact.id }, {
-           where: {
-             id: responseObjContact.id,
-           },
-         });
-       }
+      if (req.body.createdBy == '' || req.body.createdBy == 0 || req.body.createdBy == null) { // contact_id
+        let updatedCreatedBytempContactRegistration = await tempContactRegistration.update({ createdBy: responseObjContact.id }, {
+          where: {
+            id: responseObjContact.id,
+          },
+        });
+      }
 
       let branch_id = await add_contractor_to_branch(req.body.created_by, responseObjContact.id) // responseObjContact.id => dcm_contact_id
       console.log("___________________branch_id", branch_id)
@@ -484,7 +487,7 @@ registrationController.tempRegistration = async (req, res) => {
         'force_pass_chaged': '1'
       }
       let inserTedPassword = await sf_guard_user.create(user_array);
-         console.log("insertedPassword", inserTedPassword)
+      console.log("insertedPassword", inserTedPassword)
 
 
 
@@ -582,7 +585,6 @@ registrationController.basicProfileRegistration = async (req, res) => {
     const company_id = req.body.company_id ? req.body.company_id : null
     const recipient = req.body.recipient ? req.body.recipient : '';
     const dealer_arr = req.body.dealer_arr ? req.body.dealer_arr : [];
-    // const is_default = req.body.is_default ? req.body.is_default : '0';
     const country = req.body.country_id ? req.body.country_id : null;
     const address = req.body.address ? req.body.address : '';
     const post_office = req.body.post_office ? req.body.post_office : '';
@@ -590,7 +592,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
     const city = req.body.city ? req.body.city : '';
     const pin_code = req.body.pin_code ? req.body.pin_code : '';
     const state = req.body.state_id ? req.body.state_id : null;
-    const district = req.body.district_id ? req.body.district_id : null;
+    const district = req.body.city_id ? req.body.city_id : null;
     const address_change_type = req.body.address_change_type ? req.body.address_change_type : '0';
     const address_status = req.body.address_status ? req.body.address_status : '0';
     const is_active = req.body.is_active ? req.body.is_active : '1';
@@ -626,14 +628,18 @@ registrationController.basicProfileRegistration = async (req, res) => {
         profileObj = basicDetails;
       }
       let no_activeSites = await paramsOperations(org_id, contact_id, "Active Sites", valueName);
-      let contractDetails = await ambContactTagMap.findOne({ where: { "dcm_contact_id": contact_id, "amb_tag_groups_id": 2 } });
-      let tagsId = contractDetails.amb_tags_id;
-      let mappingOfficer = "";
+      let contractDetails = await ambContactTagMap.findOne({ where: { "dcm_contact_id": contact_id } });
+      let tagsId;
+      if(contractDetails) {
+        tagsId = contractDetails.amb_tags_id;
+      } else {
+        tagsId=null;
+      }
       let responseObj = {};
       let hierarchyDealerDetails = await dcm_hierarchies.findOne({ where: { "name": "Dealer", "dcm_organization_id": org_id } });
       let hierarchyTSODetails = await dcm_hierarchies.findOne({ where: { "name": "TSO", "dcm_organization_id": org_id } });
       if (hierarchyDealerDetails.id == contactDetails.created_by) {
-        mappingOfficer = tso_id;
+        let mappingOfficer = tso_id;
         responseObj = {
           "mappingOfficer": mappingOfficer,
           "contractorCategory": tagsId,
@@ -649,7 +655,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
         let contactObj = {
           approved_by: tso_id
         };
-        await tempContactRegistration.update(contactObj, { where: { "id": contact_id } })
+        await tempContactRegistration.update(contactObj, { where: { "id": contact_id } });
         await branchesContactsParent(contactDetails.createdBy, contact_id);
         let allDealerBranches = await getAllDealersTags(contact_id);
         if (allDealerBranches.length > 0) {
@@ -660,6 +666,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
             }
           }
         }
+        commonResObj(res, 200, { basicProfileDetails: responseObj });
       } else if (hierarchyTSODetails.id == contactDetails.created_by) {
         for (let i = 0; i < dealer_arr.length; i++) {
           await branchesContactsParent(dealer_arr[i], contact_id);
@@ -685,9 +692,35 @@ registrationController.basicProfileRegistration = async (req, res) => {
           "district": profileObj.dcm_cities_id,
           "pinCode": profileObj.post_code
         };
-      } else {
+        commonResObj(res, 200, { basicProfileDetails: responseObj });
+      } else if (contactDetails.dcm_hierarchies_id == 1) {
+        if (district == '' || state == '') {
+          commonResObj(res, 200, { "message": "State and city are both required" });
+        } else {
+          let tsoDetails = await tempContactRegistration.findOne({ where: { "id": tso_id } });
+          if (tsoDetails) {
+            let contactObj = {
+              approved_by: tso_id
+            };
+            await tempContactRegistration.update(contactObj, { where: { "id": contact_id } });
+            responseObj = {
+              "tso_id": tso_id,
+              "contractorCategory": tagsId,
+              "noOfActiveSites": no_activeSites,
+              "addressLine1": profileObj.line1,
+              "postOffice": profileObj.line2,
+              "landmark": profileObj.line3,
+              "city": profileObj.city,
+              "state": profileObj.dcm_states_id,
+              "district": profileObj.dcm_cities_id,
+              "pinCode": profileObj.post_code
+            };
+            commonResObj(res, 200, { basicProfileDetails: responseObj });
+          } else {
+            commonResObj(res, 200, { "message": "Please select TSO" });
+          }
+        }
       }
-      commonResObj(res, 200, { basicProfileDetails: responseObj });
     } else {
       commonResObj(res, 200, { "message": "DCM Contacts not found" });
     }
@@ -916,11 +949,27 @@ registrationController.login = async (req, res, next) => {
           subject: `${user.id}`
         }
         const token = jwt.sign(payload, `${process.env.jwt_secret}`, options);
-        commonResObj(res, 200, { message: 'Login Successful', userData: payload, access_token: token })
+        commonResObj(res, 200, { message: 'Login Successfull', userData: payload, access_token: token })
       }
     })(req, res, next);
   } catch (error) {
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.loginUser", error: error, Api: regServiceUrl + req.url, status: 500 } });
+    commonResObj(res, 500, { error: error });
+  }
+}
+
+registrationController.logout = async (req, res, next) => {
+  try {
+    req.session.destroy(function (err) {
+      if (err) {
+        commonResObj(res, 200, { message: 'Logout Unsuccessful' })
+      } else {
+        req.session = null;
+        commonResObj(res, 200, { message: 'Logout Successful' })
+      }
+    });
+  } catch (error) {
+    logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.login", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error });
   }
 }

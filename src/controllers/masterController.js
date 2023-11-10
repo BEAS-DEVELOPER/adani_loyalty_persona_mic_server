@@ -1,6 +1,6 @@
 const commonResObj = require('../../middleWares/responses/commonResponse')
-
-const { dcm_hierarchies, dcm_languages, cog_countries, cog_states, cog_cities, organization } = require('../../config/db.config')
+const dbConn = require('../../config/db.config')
+const { dcm_hierarchies, dcm_languages, countries, states, cities, organization, ambTags } = require('../../config/db.config')
 
 const logger = require('../../supports/logger')
 
@@ -21,7 +21,41 @@ const masterController = {
     createCities: {},
     findAllCities: {},
     createOrganizations: {},
-    findAllOrganizations: {}
+    findAllOrganizations: {},
+    findAllBranches: {},
+    findAllTSOs: {},
+    findAllDealers: {},
+    findAllTSOBranches: {}
+}
+
+async function getAllDealersTags(contact_id) {
+    let [allDealers, data] = await dbConn.sequelize.query("SELECT dealer_id FROM dcm_contact_parent_child_mapping WHERE contractor_id =?", { replacements: [contact_id] });
+    let branches = [];
+    if (allDealers.length > 0) {
+        for (let i = 0; i < allDealers.length; i++) {
+            let [branch, brdata] = await dbConn.sequelize.query("SELECT amb_tags.id FROM amb_contact_tag_mapping JOIN amb_tags on amb_tags.id=amb_contact_tag_mapping.amb_tags_id WHERE amb_tags.is_active = '1' AND amb_tags.amb_tag_groups_id = 1 AND amb_contact_tag_mapping.is_active = '1' AND amb_contact_tag_mapping.dcm_contact_id = ?", { replacements: [allDealers[i].dealer_id] })
+            if (branch.length > 0) {
+                branches.push(branch[0]);
+            }
+        }
+    }
+    return branches.filter((obj, index) => { return index === branches.findIndex(o => obj.name === o.name); });
+}
+
+async function getAllTagIds(stateId, cityId) {
+    let [allContactIds, data] = await dbConn.sequelize.query('SELECT dcm_zone_contact_mapping.dcm_contact_id FROM dcm_zone_contact_mapping JOIN dcm_zone_location_mapping ON dcm_zone_location_mapping.id=dcm_zone_contact_mapping.dcm_zone_location_mapping_id WHERE dcm_zone_location_mapping.dcm_state_id =? AND dcm_zone_location_mapping.dcm_district_id =?', { replacements: [stateId, cityId] });
+    let allTagIds = [];
+    for (let i = 0; i < allContactIds.length; i++) {
+        let contact_id = allContactIds[i].dcm_contact_id;
+        let [contactTagIds, cdata] = await dbConn.sequelize.query('SELECT amb_contact_tag_mapping.amb_tags_id FROM amb_contact_tag_mapping WHERE dcm_contact_id =?', { replacements: [contact_id] });
+        for (let j = 0; j < contactTagIds.length; j++) {
+            let id = contactTagIds[j].amb_tags_id;
+            allTagIds.push(id);
+        }
+    }
+    return allTagIds.filter(function (v, i, self) {
+        return i == self.indexOf(v);
+    });;
 }
 
 masterController.createLanguages = async (req, res) => {
@@ -103,7 +137,7 @@ masterController.createCountries = async (req, res) => {
             iso2_code: iso2_code,
             created_at: date_create
         }
-        let country = await cog_countries.create(countryObj);
+        let country = await countries.create(countryObj);
         commonResObj(res, 200, { countryDetails: country });
     } catch (error) {
         logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.createCountries", error: error, Api: masterServiceUrl + req.url, status: 500 } });
@@ -112,7 +146,7 @@ masterController.createCountries = async (req, res) => {
 }
 masterController.findAllCountries = async (req, res) => {
     try {
-        let all_countries = await cog_countries.findAll();
+        let all_countries = await countries.findAll();
         commonResObj(res, 200, { countriesDetails: all_countries });
     } catch (error) {
         logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllCountries", error: error, Api: masterServiceUrl + req.url, status: 500 } });
@@ -131,9 +165,9 @@ masterController.createStates = async (req, res) => {
             is_active: "1",
             created_at: date_create
         }
-        let countryDetails = await cog_countries.findOne({ where: { "id": stateObj.cog_countries_id } });
+        let countryDetails = await countries.findOne({ where: { "id": stateObj.cog_countries_id } });
         if (countryDetails && countryDetails.has_states == 1) {
-            let state = await cog_states.create(stateObj);
+            let state = await states.create(stateObj);
             commonResObj(res, 200, { stateDetails: state });
         } else {
             commonResObj(res, 200, { cityDetails: "State not added. Please enter correct country id" });
@@ -145,7 +179,7 @@ masterController.createStates = async (req, res) => {
 }
 masterController.findAllStates = async (req, res) => {
     try {
-        let all_states = await cog_states.findAll();
+        let all_states = await states.findAll();
         commonResObj(res, 200, { statesDetails: all_states });
     } catch (error) {
         logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllStates", error: error, Api: masterServiceUrl + req.url, status: 500 } });
@@ -163,10 +197,10 @@ masterController.createCities = async (req, res) => {
             created_at: date_create,
             is_active: "1"
         };
-        let countryDetails = await cog_countries.findOne({ where: { "id": cityObj.cog_countries_id } });
-        let stateDetails = await cog_states.findOne({ where: { "id": cityObj.cog_states_id } });
+        let countryDetails = await countries.findOne({ where: { "id": cityObj.cog_countries_id } });
+        let stateDetails = await states.findOne({ where: { "id": cityObj.cog_states_id } });
         if (countryDetails && (countryDetails.has_states == 1 || countryDetails.has_cities == 1) && stateDetails && stateDetails.has_cities == 1) {
-            let city = await cog_cities.create(cityObj);
+            let city = await cities.create(cityObj);
             commonResObj(res, 200, { cityDetails: city });
         } else {
             commonResObj(res, 200, { cityDetails: "City not added.. Please enter correct country or state id" });
@@ -178,9 +212,10 @@ masterController.createCities = async (req, res) => {
 }
 masterController.findAllCities = async (req, res) => {
     try {
-        let all_cities = await cog_cities.findAll();
+        let all_cities = await cities.findAll();
         commonResObj(res, 200, { citiesDetails: all_cities });
     } catch (error) {
+        console.log(error)
         logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllCities", error: error, Api: masterServiceUrl + req.url, status: 500 } });
         commonResObj(res, 500, { error: error })
     }
@@ -208,6 +243,102 @@ masterController.findAllOrganizations = async (req, res) => {
         commonResObj(res, 200, { organizationDetails: all_organization });
     } catch (error) {
         logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllOrganizations", error: error, Api: masterServiceUrl + req.url, status: 500 } });
+        commonResObj(res, 500, { error: error })
+    }
+}
+
+masterController.findAllBranches = async (req, res) => {
+    try {
+        const state_id = req.params.state_id;
+        const city_id = req.params.city_id;
+        let tag_ids = await getAllTagIds(state_id, city_id);
+        let allBranches = [];
+        for (let i = 0; i < tag_ids.length; i++) {
+            let tag_id = tag_ids[i];
+            let branchDetails = await ambTags.findOne({ where: { "id": tag_id, "amb_tag_groups_id": 1 } });
+            allBranches.push(branchDetails.name);
+        }
+        commonResObj(res, 200, { branchDetails: allBranches });
+    } catch (error) {
+        logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllBranches", error: error, Api: masterServiceUrl + req.url, status: 500 } });
+        commonResObj(res, 500, { error: error })
+    }
+}
+
+masterController.findAllTSOBranches = async (req, res) => {
+    try {
+        const tag_id = req.params.branch_id;
+        let [TSODetails, data] = await dbConn.sequelize.query('SELECT dcm_contacts.* FROM dcm_contacts JOIN amb_contact_tag_mapping ON dcm_contacts.id = amb_contact_tag_mapping.dcm_contact_id WHERE dcm_contacts.dcm_hierarchies_id = 2 AND amb_contact_tag_mapping.amb_tags_id =?', { replacements: [tag_id] });
+        let allTSONames = [];
+        for (let i = 0; i < TSODetails.length; i++) {
+            let obj = TSODetails[i];
+            let fname = obj.first_name ? obj.first_name : '';
+            let lname = obj.last_name ? obj.last_name : '';
+            let mname = obj.middle_name ? obj.middle_name : '';
+            let name1 = (fname + " " + mname).trim();
+            let full_name = (name1 + " " + lname).trim();
+            if (full_name.length > 0) {
+                allTSONames.push(full_name);
+            }
+        }
+        commonResObj(res, 200, { TSODetails: allTSONames });
+    } catch (error) {
+        logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllTSOs", error: error, Api: masterServiceUrl + req.url, status: 500 } });
+        commonResObj(res, 500, { error: error })
+    }
+}
+
+masterController.findAllDealers = async (req, res) => {
+    try {
+        const contact_id = req.params.contact_id;
+        let allDealerBranches = await getAllDealersTags(contact_id);
+        let [dealerDetails, data] = [];
+        for (let i = 0; i < allDealerBranches.length; i++) {
+            [dealerDetails, data] = await dbConn.sequelize.query('SELECT dcm_contacts.* FROM dcm_contacts JOIN amb_contact_tag_mapping ON dcm_contacts.id = amb_contact_tag_mapping.dcm_contact_id WHERE dcm_contacts.dcm_hierarchies_id = 3 AND amb_contact_tag_mapping.amb_tags_id =?', { replacements: [allDealerBranches[i].id] });
+        }
+        let allDealerNames = [];
+        for (let i = 0; i < dealerDetails.length; i++) {
+            let obj = dealerDetails[i];
+            let fname = obj.first_name ? obj.first_name : '';
+            let lname = obj.last_name ? obj.last_name : '';
+            let mname = obj.middle_name ? obj.middle_name : '';
+            let name1 = (fname + " " + mname).trim();
+            let full_name = (name1 + " " + lname).trim();
+            if (full_name.length > 0) {
+                allDealerNames.push(full_name);
+            }
+        }
+        commonResObj(res, 200, { dealerDetails: allDealerNames });
+    } catch (error) {
+        logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllTSOs", error: error, Api: masterServiceUrl + req.url, status: 500 } });
+        commonResObj(res, 500, { error: error })
+    }
+}
+
+masterController.findAllTSOs = async (req, res) => {
+    try {
+        const contact_id = req.params.contact_id;
+        let allTSOBranches = await getAllDealersTags(contact_id);
+        let [TSODetails, data] = [];
+        for (let i = 0; i < allTSOBranches.length; i++) {
+            [TSODetails, data] = await dbConn.sequelize.query('SELECT dcm_contacts.* FROM dcm_contacts JOIN amb_contact_tag_mapping ON dcm_contacts.id = amb_contact_tag_mapping.dcm_contact_id WHERE dcm_contacts.dcm_hierarchies_id = 2 AND amb_contact_tag_mapping.amb_tags_id =?', { replacements: [allTSOBranches[i].id] });
+        }
+        let allTSONames = [];
+        for (let i = 0; i < TSODetails.length; i++) {
+            let obj = TSODetails[i];
+            let fname = obj.first_name ? obj.first_name : '';
+            let lname = obj.last_name ? obj.last_name : '';
+            let mname = obj.middle_name ? obj.middle_name : '';
+            let name1 = (fname + " " + mname).trim();
+            let full_name = (name1 + " " + lname).trim();
+            if (full_name.length > 0) {
+                allTSONames.push(full_name);
+            }
+        }
+        commonResObj(res, 200, { TSODetails: allTSONames });
+    } catch (error) {
+        console.log(error)
+        logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllTSOs", error: error, Api: masterServiceUrl + req.url, status: 500 } });
         commonResObj(res, 500, { error: error })
     }
 }
