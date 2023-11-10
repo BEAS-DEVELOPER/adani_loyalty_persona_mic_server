@@ -23,7 +23,23 @@ const masterController = {
     createOrganizations: {},
     findAllOrganizations: {},
     findAllBranches: {},
-    findAllTSOs: {}
+    findAllTSOs: {},
+    findAllDealers: {},
+    findAllTSOBranches: {}
+}
+
+async function getAllDealersTags(contact_id) {
+    let [allDealers, data] = await dbConn.sequelize.query("SELECT dealer_id FROM dcm_contact_parent_child_mapping WHERE contractor_id =?", { replacements: [contact_id] });
+    let branches = [];
+    if (allDealers.length > 0) {
+        for (let i = 0; i < allDealers.length; i++) {
+            let [branch, brdata] = await dbConn.sequelize.query("SELECT amb_tags.id FROM amb_contact_tag_mapping JOIN amb_tags on amb_tags.id=amb_contact_tag_mapping.amb_tags_id WHERE amb_tags.is_active = '1' AND amb_tags.amb_tag_groups_id = 1 AND amb_contact_tag_mapping.is_active = '1' AND amb_contact_tag_mapping.dcm_contact_id = ?", { replacements: [allDealers[i].dealer_id] })
+            if (branch.length > 0) {
+                branches.push(branch[0]);
+            }
+        }
+    }
+    return branches.filter((obj, index) => { return index === branches.findIndex(o => obj.name === o.name); });
 }
 
 async function getAllTagIds(stateId, cityId) {
@@ -248,10 +264,10 @@ masterController.findAllBranches = async (req, res) => {
     }
 }
 
-masterController.findAllTSOs = async (req, res) => {
+masterController.findAllTSOBranches = async (req, res) => {
     try {
         const tag_id = req.params.branch_id;
-        let [TSODetails, data] = await dbConn.sequelize.query('SELECT dcm_contacts.* FROM dcm_contacts JOIN amb_contact_tag_mapping ON dcm_contacts.id = amb_contact_tag_mapping.dcm_contact_id WHERE amb_contact_tag_mapping.amb_tags_id =?', { replacements: [tag_id] });
+        let [TSODetails, data] = await dbConn.sequelize.query('SELECT dcm_contacts.* FROM dcm_contacts JOIN amb_contact_tag_mapping ON dcm_contacts.id = amb_contact_tag_mapping.dcm_contact_id WHERE dcm_contacts.dcm_hierarchies_id = 2 AND amb_contact_tag_mapping.amb_tags_id =?', { replacements: [tag_id] });
         let allTSONames = [];
         for (let i = 0; i < TSODetails.length; i++) {
             let obj = TSODetails[i];
@@ -266,6 +282,61 @@ masterController.findAllTSOs = async (req, res) => {
         }
         commonResObj(res, 200, { TSODetails: allTSONames });
     } catch (error) {
+        logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllTSOs", error: error, Api: masterServiceUrl + req.url, status: 500 } });
+        commonResObj(res, 500, { error: error })
+    }
+}
+
+masterController.findAllDealers = async (req, res) => {
+    try {
+        const contact_id = req.params.contact_id;
+        let allDealerBranches = await getAllDealersTags(contact_id);
+        let [dealerDetails, data] = [];
+        for (let i = 0; i < allDealerBranches.length; i++) {
+            [dealerDetails, data] = await dbConn.sequelize.query('SELECT dcm_contacts.* FROM dcm_contacts JOIN amb_contact_tag_mapping ON dcm_contacts.id = amb_contact_tag_mapping.dcm_contact_id WHERE dcm_contacts.dcm_hierarchies_id = 3 AND amb_contact_tag_mapping.amb_tags_id =?', { replacements: [allDealerBranches[i].id] });
+        }
+        let allDealerNames = [];
+        for (let i = 0; i < dealerDetails.length; i++) {
+            let obj = dealerDetails[i];
+            let fname = obj.first_name ? obj.first_name : '';
+            let lname = obj.last_name ? obj.last_name : '';
+            let mname = obj.middle_name ? obj.middle_name : '';
+            let name1 = (fname + " " + mname).trim();
+            let full_name = (name1 + " " + lname).trim();
+            if (full_name.length > 0) {
+                allDealerNames.push(full_name);
+            }
+        }
+        commonResObj(res, 200, { dealerDetails: allDealerNames });
+    } catch (error) {
+        logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllTSOs", error: error, Api: masterServiceUrl + req.url, status: 500 } });
+        commonResObj(res, 500, { error: error })
+    }
+}
+
+masterController.findAllTSOs = async (req, res) => {
+    try {
+        const contact_id = req.params.contact_id;
+        let allTSOBranches = await getAllDealersTags(contact_id);
+        let [TSODetails, data] = [];
+        for (let i = 0; i < allTSOBranches.length; i++) {
+            [TSODetails, data] = await dbConn.sequelize.query('SELECT dcm_contacts.* FROM dcm_contacts JOIN amb_contact_tag_mapping ON dcm_contacts.id = amb_contact_tag_mapping.dcm_contact_id WHERE dcm_contacts.dcm_hierarchies_id = 2 AND amb_contact_tag_mapping.amb_tags_id =?', { replacements: [allTSOBranches[i].id] });
+        }
+        let allTSONames = [];
+        for (let i = 0; i < TSODetails.length; i++) {
+            let obj = TSODetails[i];
+            let fname = obj.first_name ? obj.first_name : '';
+            let lname = obj.last_name ? obj.last_name : '';
+            let mname = obj.middle_name ? obj.middle_name : '';
+            let name1 = (fname + " " + mname).trim();
+            let full_name = (name1 + " " + lname).trim();
+            if (full_name.length > 0) {
+                allTSONames.push(full_name);
+            }
+        }
+        commonResObj(res, 200, { TSODetails: allTSONames });
+    } catch (error) {
+        console.log(error)
         logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllTSOs", error: error, Api: masterServiceUrl + req.url, status: 500 } });
         commonResObj(res, 500, { error: error })
     }
