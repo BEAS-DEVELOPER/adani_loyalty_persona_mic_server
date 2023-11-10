@@ -1,6 +1,6 @@
 
 const paramsMasterIds ={
-    'Adani_AdaniLoyalty_gender_paramId':1,
+    'Adani_AdaniLoyalty_marital_paramId':1,
 }
 
 module.exports = paramsMasterIds
