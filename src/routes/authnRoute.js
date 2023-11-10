@@ -27,5 +27,6 @@ router.post('/basic/profile', registrationController.basicProfileRegistration);
 router.post('/additional/profile', uploads.fields([{ name: 'pan_image', maxCount: 1 }, { name: 'front_image', maxCount: 1 }, { name: 'back_image', maxCount: 1 }]), registrationController.addProfileRegistration);
 router.post('/sale/register', registrationController.saleRegistration);
 router.post('/login', registrationController.login);
+router.post('/logout', registrationController.logout);
 
 module.exports = router;

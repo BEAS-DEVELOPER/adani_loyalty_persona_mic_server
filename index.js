@@ -46,6 +46,3 @@ app.use(masterNodebaseUrl, masterRoute);
 // SERVER STARTING 
 app.use(express.static(path.join(__dirname, 'public')));
 app.listen(port, () => { console.log(" ===================== SERVER IS RUNNING ON PORT =================", port); })
-
-
-

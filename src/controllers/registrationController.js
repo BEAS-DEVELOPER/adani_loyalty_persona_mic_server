@@ -42,10 +42,10 @@ const registrationController = {
   addProfileRegistration: {},
   saleRegistration: {},
   login: {},
-  getPendingList:{},
-  getListOfTSOByBranch:{},
-  assignUsersTso:{}
-
+  getPendingList: {},
+  getListOfTSOByBranch: {},
+  assignUsersTso: {},
+  logout: {}
 }
 
 async function branchesContactsParent(dealer_id, contact_id) {
@@ -121,7 +121,7 @@ async function paramsOperations(org_id, contact_id, master_name, params_value) {
       let create_param_val = {};
       let paramsValueDetails = await paramsValue.findOne({ where: { "dcm_contacts_id": contact_id, "dcm_param_master_id": masterParam_id } });
       if (!paramsValueDetails) {
-          create_param_val = await paramsValue.create(valObj);
+        create_param_val = await paramsValue.create(valObj);
       }
       response = create_param_val.value;
     }
@@ -185,48 +185,48 @@ function generateEmailVefificationCode(email) {
   return crypto.createHash('md5').update(email).digest("hex")
 }
 
-registrationController.assignUsersTso = async(req , res )=>{
-  try{
+registrationController.assignUsersTso = async (req, res) => {
+  try {
     let TSO_contactId = req.body.TSO_contactId
-    let userContactId  = req.body.userContactId
-    let data =await tempContactRegistration.update({ "created_by": TSO_contactId }, {
+    let userContactId = req.body.userContactId
+    let data = await tempContactRegistration.update({ "created_by": TSO_contactId }, {
       where: {
         id: userContactId
       }
     });
-   
-    commonResObj(res, 200, { message: 'User is assigned with new TSO' , Data : data  }); 
-  }catch(error){
+
+    commonResObj(res, 200, { message: 'User is assigned with new TSO', Data: data });
+  } catch (error) {
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.updateUsersTso", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error })
   }
 }
 
-registrationController.getListOfTSOByBranch = async(req , res )=>{
-  try{
+registrationController.getListOfTSOByBranch = async (req, res) => {
+  try {
     let loginUserHirarchyId = req.body.loginUserHirarchy
-    let tagGroupId          = groupMembersIds.tag_Group_Id
-    let loginUserContactId  = req.body.loginUserContactId
-    let array =[]
-    const [data1, result1] = await dbConn.sequelize.query("SELECT amb_map.* FROM amb_contact_tag_mapping amb_map  JOIN amb_tags tags ON amb_map.amb_tags_id=tags.id  join amb_tag_groups tag_group on tag_group.id = tags.amb_tag_groups_id WHERE amb_map.dcm_contact_id = ? and tag_group.id = ?", { replacements: [loginUserContactId,tagGroupId], })
-    for(let i= 0 ; i< data1.length ; i++){
-     const [data2, result2] = await dbConn.sequelize.query("SELECT con.id as Contact_Id,con.id_extern01 as 'Tso_Code', CONCAT(con.first_name,' ', con.last_name) AS 'Tso_Name', branch.name as 'Branch_Name' FROM dcm_contacts con join amb_contact_tag_mapping ctm ON ctm.dcm_contact_id = con.id JOIN amb_tags branch ON branch.id = ctm.amb_tags_id WHERE branch.id =?  AND con.dcm_hierarchies_id = ? AND con.is_deleted = 0 GROUP BY con.id", { replacements: [data1[i].amb_tags_id,loginUserHirarchyId] })
-     array.push(data2)
+    let tagGroupId = groupMembersIds.tag_Group_Id
+    let loginUserContactId = req.body.loginUserContactId
+    let array = []
+    const [data1, result1] = await dbConn.sequelize.query("SELECT amb_map.* FROM amb_contact_tag_mapping amb_map  JOIN amb_tags tags ON amb_map.amb_tags_id=tags.id  join amb_tag_groups tag_group on tag_group.id = tags.amb_tag_groups_id WHERE amb_map.dcm_contact_id = ? and tag_group.id = ?", { replacements: [loginUserContactId, tagGroupId], })
+    for (let i = 0; i < data1.length; i++) {
+      const [data2, result2] = await dbConn.sequelize.query("SELECT con.id as Contact_Id,con.id_extern01 as 'Tso_Code', CONCAT(con.first_name,' ', con.last_name) AS 'Tso_Name', branch.name as 'Branch_Name' FROM dcm_contacts con join amb_contact_tag_mapping ctm ON ctm.dcm_contact_id = con.id JOIN amb_tags branch ON branch.id = ctm.amb_tags_id WHERE branch.id =?  AND con.dcm_hierarchies_id = ? AND con.is_deleted = 0 GROUP BY con.id", { replacements: [data1[i].amb_tags_id, loginUserHirarchyId] })
+      array.push(data2)
     }
-    commonResObj(res, 200, { message: 'List of TSO fetch successfully' , Data : array  });  
+    commonResObj(res, 200, { message: 'List of TSO fetch successfully', Data: array });
   }
-  catch(error){
+  catch (error) {
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.getListOfTSOByBranch", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error })
   }
 
-  
+
 }
 
 registrationController.getPendingList = async (req, res) => { // list of user to be approved
-    let pendingUsers = await tempEmailRegistration.findAll({ where: { is_approved:0 } });
-    console.log("LIST OF USERS TO BE APPROVED  : " , pendingUsers)
-    commonResObj(res, 200, { message: 'List of users to be approved' , Data : pendingUsers  });  
+  let pendingUsers = await tempEmailRegistration.findAll({ where: { is_approved: 0 } });
+  console.log("LIST OF USERS TO BE APPROVED  : ", pendingUsers)
+  commonResObj(res, 200, { message: 'List of users to be approved', Data: pendingUsers });
 }
 
 registrationController.tempRegistration = async (req, res) => {
@@ -305,20 +305,20 @@ registrationController.tempRegistration = async (req, res) => {
       let responseObjContact = await tempContactRegistration.create(tempRegContactsObj);
 
       if (responseObjContact.id) { // contact_id
-       let updatedtempContactRegistration =  await tempContactRegistration.update({ id_extern01: 'AMB_' + responseObjContact.id }, {
+        let updatedtempContactRegistration = await tempContactRegistration.update({ id_extern01: 'AMB_' + responseObjContact.id }, {
           where: {
             id: responseObjContact.id,
           },
         });
       }
       // if createdBy == '' then update it by contactId
-      if (req.body.createdBy == '' || req.body.createdBy == 0 || req.body.createdBy == null ) { // contact_id
-        let updatedCreatedBytempContactRegistration =  await tempContactRegistration.update({ createdBy: responseObjContact.id }, {
-           where: {
-             id: responseObjContact.id,
-           },
-         });
-       }
+      if (req.body.createdBy == '' || req.body.createdBy == 0 || req.body.createdBy == null) { // contact_id
+        let updatedCreatedBytempContactRegistration = await tempContactRegistration.update({ createdBy: responseObjContact.id }, {
+          where: {
+            id: responseObjContact.id,
+          },
+        });
+      }
 
       let branch_id = await add_contractor_to_branch(req.body.created_by, responseObjContact.id) // responseObjContact.id => dcm_contact_id
       console.log("___________________branch_id", branch_id)
@@ -336,7 +336,7 @@ registrationController.tempRegistration = async (req, res) => {
         'force_pass_chaged': '1'
       }
       let inserTedPassword = await sf_guard_user.create(user_array);
-         console.log("insertedPassword", inserTedPassword)
+      console.log("insertedPassword", inserTedPassword)
 
 
 
@@ -797,6 +797,22 @@ registrationController.login = async (req, res, next) => {
     })(req, res, next);
   } catch (error) {
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.loginUser", error: error, Api: regServiceUrl + req.url, status: 500 } });
+    commonResObj(res, 500, { error: error });
+  }
+}
+
+registrationController.logout = async (req, res, next) => {
+  try {
+    req.session.destroy(function (err) {
+      if (err) {
+        commonResObj(res, 200, { message: 'Logout Unsuccessful' })
+      } else {
+        req.session = null;
+        commonResObj(res, 200, { message: 'Logout Successful' })
+      }
+    });
+  } catch (error) {
+    logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.login", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error });
   }
 }
