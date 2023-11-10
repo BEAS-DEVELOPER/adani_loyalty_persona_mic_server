@@ -478,13 +478,17 @@ registrationController.basicProfileRegistration = async (req, res) => {
       }
       let no_activeSites = await paramsOperations(org_id, contact_id, "Active Sites", valueName);
       let contractDetails = await ambContactTagMap.findOne({ where: { "dcm_contact_id": contact_id } });
-      let tagsId = contractDetails.amb_tags_id;
-      let mappingOfficer = "";
+      let tagsId;
+      if(contractDetails) {
+        tagsId = contractDetails.amb_tags_id;
+      } else {
+        tagsId=null;
+      }
       let responseObj = {};
       let hierarchyDealerDetails = await dcm_hierarchies.findOne({ where: { "name": "Dealer", "dcm_organization_id": org_id } });
       let hierarchyTSODetails = await dcm_hierarchies.findOne({ where: { "name": "TSO", "dcm_organization_id": org_id } });
       if (hierarchyDealerDetails.id == contactDetails.created_by) {
-        mappingOfficer = tso_id;
+        let mappingOfficer = tso_id;
         responseObj = {
           "mappingOfficer": mappingOfficer,
           "contractorCategory": tagsId,
@@ -511,6 +515,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
             }
           }
         }
+        commonResObj(res, 200, { basicProfileDetails: responseObj });
       } else if (hierarchyTSODetails.id == contactDetails.created_by) {
         for (let i = 0; i < dealer_arr.length; i++) {
           await branchesContactsParent(dealer_arr[i], contact_id);
@@ -536,6 +541,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
           "district": profileObj.dcm_cities_id,
           "pinCode": profileObj.post_code
         };
+        commonResObj(res, 200, { basicProfileDetails: responseObj });
       } else if (contactDetails.dcm_hierarchies_id == 1) {
         if (district == '' || state == '') {
           commonResObj(res, 200, { "message": "State and city are both required" });
@@ -558,12 +564,12 @@ registrationController.basicProfileRegistration = async (req, res) => {
               "district": profileObj.dcm_cities_id,
               "pinCode": profileObj.post_code
             };
+            commonResObj(res, 200, { basicProfileDetails: responseObj });
           } else {
             commonResObj(res, 200, { "message": "Please select TSO" });
           }
         }
       }
-      commonResObj(res, 200, { basicProfileDetails: responseObj });
     } else {
       commonResObj(res, 200, { "message": "DCM Contacts not found" });
     }
