@@ -320,19 +320,23 @@ masterController.findAllTSOs = async (req, res) => {
         const contact_id = req.params.contact_id;
         let allTSOBranches = await getAllDealersTags(contact_id);
         let [TSODetails, data] = [];
-        for (let i = 0; i < allTSOBranches.length; i++) {
-            [TSODetails, data] = await dbConn.sequelize.query('SELECT dcm_contacts.* FROM dcm_contacts JOIN amb_contact_tag_mapping ON dcm_contacts.id = amb_contact_tag_mapping.dcm_contact_id WHERE dcm_contacts.dcm_hierarchies_id = 2 AND amb_contact_tag_mapping.amb_tags_id =?', { replacements: [allTSOBranches[i].id] });
+        if (allTSOBranches.length > 0) {
+            for (let i = 0; i < allTSOBranches.length; i++) {
+                [TSODetails, data] = await dbConn.sequelize.query('SELECT dcm_contacts.* FROM dcm_contacts JOIN amb_contact_tag_mapping ON dcm_contacts.id = amb_contact_tag_mapping.dcm_contact_id WHERE dcm_contacts.dcm_hierarchies_id = 2 AND amb_contact_tag_mapping.amb_tags_id =?', { replacements: [allTSOBranches[i].id] });
+            }
         }
         let allTSONames = [];
-        for (let i = 0; i < TSODetails.length; i++) {
-            let obj = TSODetails[i];
-            let fname = obj.first_name ? obj.first_name : '';
-            let lname = obj.last_name ? obj.last_name : '';
-            let mname = obj.middle_name ? obj.middle_name : '';
-            let name1 = (fname + " " + mname).trim();
-            let full_name = (name1 + " " + lname).trim();
-            if (full_name.length > 0) {
-                allTSONames.push(full_name);
+        if (TSODetails.length > 0) {
+            for (let i = 0; i < TSODetails.length; i++) {
+                let obj = TSODetails[i];
+                let fname = obj.first_name ? obj.first_name : '';
+                let lname = obj.last_name ? obj.last_name : '';
+                let mname = obj.middle_name ? obj.middle_name : '';
+                let name1 = (fname + " " + mname).trim();
+                let full_name = (name1 + " " + lname).trim();
+                if (full_name.length > 0) {
+                    allTSONames.push(full_name);
+                }
             }
         }
         commonResObj(res, 200, { TSODetails: allTSONames });
