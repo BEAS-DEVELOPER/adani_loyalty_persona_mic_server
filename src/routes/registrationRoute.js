@@ -24,8 +24,14 @@ const regValidtn = require('../validations/registerValidation');
 // var uploads = multer({ storage: storage });
 
 router.post('/temporaryRegister', regValidtn._tempRegist, registrationController.tempRegistration) // AS OF NOW TEMPORARY REGISTRATIONS 
+
 router.post('/list/of/tso/by/branch' ,regValidtn._getListOfTSOByBranch, registrationController.getListOfTSOByBranch)
 router.post('/assign/tso' ,regValidtn._assignUsersTso,registrationController.assignUsersTso)
+
+router.post('/user/profile' ,regValidtn._getUserProfile,registrationController.getUserProfile)
+router.put('/update/user/profile',registrationController.updateUserProfile)
+
+
 // router.post('/basic/profile', registrationController.basicProfileRegistration);
 // router.post('/additional/profile', uploads.fields([{ name: 'pan_image', maxCount: 1 }, { name: 'front_image', maxCount: 1 }, { name: 'back_image', maxCount: 1 }]), registrationController.addProfileRegistration);
 // router.post('/sale/register', registrationController.saleRegistration);

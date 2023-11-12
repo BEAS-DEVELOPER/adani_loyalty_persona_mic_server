@@ -9,9 +9,16 @@ require("dotenv").config( );
 const registrationValidation={
    _tempRegist : {},
    _getListOfTSOByBranch:{},
-   _assignUsersTso:{}
+   _assignUsersTso:{},
+   _getUserProfile:{}
 
    
+}
+registrationValidation._getUserProfile =  async(req,res,next) =>{
+      if(ApiError.checkBody(req,res)){
+            const value = await  registrationSchema._getUserProfile(req, res , next)
+            ApiError.checkError(value ,req,res,next)
+      }
 }
 registrationValidation._getListOfTSOByBranch =  async(req,res,next) =>{
       if(ApiError.checkBody(req,res)){

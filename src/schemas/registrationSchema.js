@@ -5,7 +5,12 @@ const fieldsValidation  =   require('../../middleWares/fieldsValidation');
 const registerSchema={
    _tempRegSchema : {},
    _getListOfTSOByBranchSchema:{},
-   _assignUsersTsoSchema:{}
+   _assignUsersTsoSchema:{},
+   _getUserProfile:{}
+}
+registerSchema._getUserProfile =  async(req, res , next) =>{
+   let fields =  await  fieldsValidation(req , res, "_getUserProfile")
+   return joi.object(fields).validate(req.body, { abortEarly: false })
 }
 
 registerSchema._getListOfTSOByBranchSchema =  async(req, res , next) =>{

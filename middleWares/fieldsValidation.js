@@ -220,6 +220,7 @@ const FildsValidation=(req , res , apiFor)=>{
                     
 
         break;
+        
         case "_assignUsersTsoSchema":
             fields = {
                 TSO_contactId  : joi.number().required(),
@@ -234,6 +235,16 @@ const FildsValidation=(req , res , apiFor)=>{
                 loginUserContactId  : joi.number().required(),
             }
         break;
+
+        case "_getUserProfile":
+            fields = {
+                loginUserContactId  : joi.number().required(),
+            }
+        break;
+
+
+
+        
        
 
     }
