@@ -39,7 +39,10 @@ async function getAllDealersTags(contact_id) {
             }
         }
     }
-    return branches.filter((obj, index) => { return index === branches.findIndex(o => obj.name === o.name); });
+    if(branches.length>0) {
+        return branches.filter((obj, index) => { return index === branches.findIndex(o => obj.name === o.name); });
+    }
+    return [];
 }
 
 async function getAllTagIds(stateId, cityId) {
@@ -253,10 +256,12 @@ masterController.findAllBranches = async (req, res) => {
         const city_id = req.params.city_id;
         let tag_ids = await getAllTagIds(state_id, city_id);
         let allBranches = [];
-        for (let i = 0; i < tag_ids.length; i++) {
-            let tag_id = tag_ids[i];
-            let branchDetails = await ambTags.findOne({ where: { "id": tag_id, "amb_tag_groups_id": 1 } });
-            allBranches.push(branchDetails.name);
+        if(tag_ids.length>0) {
+            for (let i = 0; i < tag_ids.length; i++) {
+                let tag_id = tag_ids[i];
+                let branchDetails = await ambTags.findOne({ where: { "id": tag_id, "amb_tag_groups_id": 1 } });
+                allBranches.push(branchDetails.name);
+            }
         }
         commonResObj(res, 200, { branchDetails: allBranches });
     } catch (error) {
