@@ -163,7 +163,7 @@ function getHirarchyIdsOf(hirarchyIdsOf) {
 
 function generatePasswordString() {
   let pass = '';
-  // let str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' + 'abcdefghijklmnopqrstuvwxyz' + '0123456789 ' + '!@#_';
+   let str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' + 'abcdefghijklmnopqrstuvwxyz' + '0123456789 ' + '!@#_';
   for (let i = 1; i <= 8; i++) {
     let char = Math.floor(Math.random()
       * str.length + 1);
@@ -658,6 +658,7 @@ registrationController.tempRegistration = async (req, res) => {
 
     }
   } catch (error) {
+    console.log(error)
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController._tempRegistartion", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error })
   }
