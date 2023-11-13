@@ -2,7 +2,7 @@
 const hirarchyIds =[
 
     {  id : 1  , name : 'Contractor' , selfReg : true  , canRegBy : [{id:2,name:'TSO'},{id:3,name:'Dealer'}]  },
-    {  id : 2  , name : 'TSO'        , selfReg : true  , canRegBy : [{}]  },
+    {  id : 2  , name : 'TSO'        , selfReg : false  , canRegBy : [{}]  },
     {  id : 3  , name : 'Dealer'     , selfReg : false , canRegBy : [{}]  },
     {  id : 4  , name : 'Influencer'   , selfReg : false , canRegBy : [{}]  },
     // {  id : 4  , name : 'Sales Force', selfReg : false , canRegBy : [{}]  },
