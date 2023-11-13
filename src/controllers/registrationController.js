@@ -724,12 +724,13 @@ registrationController.basicProfileRegistration = async (req, res) => {
             commonResObj(res, 200, { "message": "Please select TSO" });
           }
         }
+      } else {
+        commonResObj(res, 200, { basicProfileDetails: responseObj });
       }
     } else {
       commonResObj(res, 200, { "message": "DCM Contacts not found" });
     }
   } catch (error) {
-    console.log(error)
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.basicProfileRegistration", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error })
   }
