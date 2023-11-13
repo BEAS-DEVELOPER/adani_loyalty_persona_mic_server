@@ -45,13 +45,13 @@ const registrationController = {
   getPendingList: {},
   getListOfTSOByBranch: {},
   assignUsersTso: {},
-  getPendingList:{},
-  getListOfTSOByBranch:{},
-  assignUsersTso:{},
+  getPendingList: {},
+  getListOfTSOByBranch: {},
+  assignUsersTso: {},
 
-  getUserProfile:{},
-  updateUserProfile:{},
-  
+  getUserProfile: {},
+  updateUserProfile: {},
+
   logout: {}
 }
 
@@ -78,7 +78,10 @@ async function getAllDealersTags(contact_id) {
       }
     }
   }
-  return branches.filter((obj, index) => { return index === branches.findIndex(o => obj.name === o.name); });
+  if (branches.length > 0) {
+    return branches.filter((obj, index) => { return index === branches.findIndex(o => obj.name === o.name); });
+  }
+  return [];
 }
 
 async function create_zone_contact_mapping(zone_name, contact_id) {
@@ -114,23 +117,24 @@ async function paramsOperations(org_id, contact_id, master_name, params_value) {
   let orgDetails = await organization.findOne({ where: { "id": org_id } });
   let date_create = new Date().toISOString();
   let response = "";
-
   if (params_value.length > 0) {
     if (orgDetails) {
       let masterParamsDetails = await paramsMaster.findOne({ where: { "dcm_organization_id": org_id, "name": master_name } });
-      let masterParam_id = masterParamsDetails.id;
-      let valObj = {
-        dcm_param_master_id: masterParam_id,
-        value: params_value.toString(),
-        dcm_contact_id: contact_id,
-        created_at: date_create
-      };
-      let create_param_val = {};
-      let paramsValueDetails = await paramsValue.findOne({ where: { "dcm_contacts_id": contact_id, "dcm_param_master_id": masterParam_id } });
-      if (!paramsValueDetails) {
-        create_param_val = await paramsValue.create(valObj);
+      if (masterParamsDetails) {
+        let masterParam_id = masterParamsDetails.id;
+        let valObj = {
+          dcm_param_master_id: masterParam_id,
+          value: params_value.toString(),
+          dcm_contact_id: contact_id,
+          created_at: date_create
+        };
+        let create_param_val = {};
+        let paramsValueDetails = await paramsValue.findOne({ where: { "dcm_contacts_id": contact_id, "dcm_param_master_id": masterParam_id } });
+        if (!paramsValueDetails) {
+          create_param_val = await paramsValue.create(valObj);
+        }
+        response = create_param_val.value;
       }
-      response = create_param_val.value;
     }
   }
   return response;
@@ -206,62 +210,62 @@ registrationController.assignUsersTso = async (req, res) => {
     commonResObj(res, 500, { error: error })
   }
 }
-registrationController.getUserProfile = async( req , res )=>{
-  try{
-    let loginUserContactId  = req.body.loginUserContactId
+registrationController.getUserProfile = async (req, res) => {
+  try {
+    let loginUserContactId = req.body.loginUserContactId
     const [data1, result1] = await dbConn.sequelize.query("SELECT * FROM dcm_contacts dcmcon  JOIN dcm_phones dcmphone ON dcmphone.dcm_contacts_id=dcmcon.id  join dcm_emails dcmemail on dcmemail.dcm_contacts_id= dcmcon.id   WHERE dcmcon.id = ?", { replacements: [loginUserContactId], })
     const [data2, result2] = await dbConn.sequelize.query("SELECT * FROM dcm_group_members_info  WHERE dcm_group_members_info.dcm_contacts_id = ?", { replacements: [loginUserContactId], })
- 
-    let full_name =''
-    if(data1[0].middle_name == "" || data1[0].middle_name == null || data1[0].middle_name== " " ){
-         full_name =  data1[0].first_name +" "+ data1[0].last_name
-    }else{
-      full_name =  data1[0].first_name +" "+data1[0].middle_name + " " +data1[0].last_name
+
+    let full_name = ''
+    if (data1[0].middle_name == "" || data1[0].middle_name == null || data1[0].middle_name == " ") {
+      full_name = data1[0].first_name + " " + data1[0].last_name
+    } else {
+      full_name = data1[0].first_name + " " + data1[0].middle_name + " " + data1[0].last_name
     }
-    let obj={
-          full_name : full_name ,
-          mobile_number: data1[0].mobile_number,
-          profile_pic:  data1[0].profile_pic,
-          company:data1[0].company,
-          designation:data1[0].designation,
-          gender: data1[0].gender,
-          date_of_birth:data1[0].date_of_birth,
-          dcm_hierarchies_id:data1[0].dcm_hierarchies_id,
-          is_verified: data1[0].is_verified,
-          verified_at: data1[0].verified_at,
-          verified_by: data1[0].verified_by,
-          dcm_organization_id: data1[0].dcm_organization_id,
-          enrollment_date:data1[0].enrollment_date,
-          dcm_languages_id: data1[0].dcm_languages_id,
-          can_redeem:data1[0].can_redeem,
-          is_approved:data1[0].approved_by,
-          approved_by:data1[0].approved_by,
-          approved_at:data1[0].approved_at,
-          contact_id: data1[0].dcm_contacts_id,
-          mobile_number:data1[0].number,
-          country_code:data1[0].country_code  ,
-          email_address:data1[0].email_address,
+    let obj = {
+      full_name: full_name,
+      mobile_number: data1[0].mobile_number,
+      profile_pic: data1[0].profile_pic,
+      company: data1[0].company,
+      designation: data1[0].designation,
+      gender: data1[0].gender,
+      date_of_birth: data1[0].date_of_birth,
+      dcm_hierarchies_id: data1[0].dcm_hierarchies_id,
+      is_verified: data1[0].is_verified,
+      verified_at: data1[0].verified_at,
+      verified_by: data1[0].verified_by,
+      dcm_organization_id: data1[0].dcm_organization_id,
+      enrollment_date: data1[0].enrollment_date,
+      dcm_languages_id: data1[0].dcm_languages_id,
+      can_redeem: data1[0].can_redeem,
+      is_approved: data1[0].approved_by,
+      approved_by: data1[0].approved_by,
+      approved_at: data1[0].approved_at,
+      contact_id: data1[0].dcm_contacts_id,
+      mobile_number: data1[0].number,
+      country_code: data1[0].country_code,
+      email_address: data1[0].email_address,
     }
-   for( let i = 0 ; i< data2.length ; i ++){
-       if(data2[i].dcm_group_members_id == groupMembersIds.dcm_groupMembers_aadhar_id ){
-            obj['aadhar']=data2[i].value
-       }
-       if(data2[i].dcm_group_members_id == groupMembersIds.dcm_groupMembers_GSTN_id ){
-            obj['GSTN']=data2[i].value
-       }
-       if(data2[i].dcm_group_members_id == groupMembersIds.dcm_groupMembers_PAN_id ){
-            obj['PAN']=data2[i].value
-       }
-       if(data2[i].dcm_group_members_id == groupMembersIds.dcm_groupMembers_drivinglicense_id ){
-            obj['driving_license']=data2[i].value
-       }
-       if(data2[i].dcm_group_members_id == groupMembersIds.dcm_groupMembers_voterId_id ){
-            obj['voter_Id']=data2[i].value
-       }
-   }
-    commonResObj(res, 200, { message: 'user profile data fetched successfully' , Data : obj  });  
+    for (let i = 0; i < data2.length; i++) {
+      if (data2[i].dcm_group_members_id == groupMembersIds.dcm_groupMembers_aadhar_id) {
+        obj['aadhar'] = data2[i].value
+      }
+      if (data2[i].dcm_group_members_id == groupMembersIds.dcm_groupMembers_GSTN_id) {
+        obj['GSTN'] = data2[i].value
+      }
+      if (data2[i].dcm_group_members_id == groupMembersIds.dcm_groupMembers_PAN_id) {
+        obj['PAN'] = data2[i].value
+      }
+      if (data2[i].dcm_group_members_id == groupMembersIds.dcm_groupMembers_drivinglicense_id) {
+        obj['driving_license'] = data2[i].value
+      }
+      if (data2[i].dcm_group_members_id == groupMembersIds.dcm_groupMembers_voterId_id) {
+        obj['voter_Id'] = data2[i].value
+      }
+    }
+    commonResObj(res, 200, { message: 'user profile data fetched successfully', Data: obj });
   }
-  catch(error){
+  catch (error) {
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.getUserProfile", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error })
   }
@@ -295,86 +299,86 @@ registrationController.getPendingList = async (req, res) => { // list of user to
 }
 
 registrationController.updateUserProfile = async (req, res) => {
-  try{
+  try {
 
-     // CHECKING MOBILE NUMBER AND EMAAIL ADDRESS 
-     let loginUserContactId = req.body.loginUserContactId
-     let [isContactExist, result1] = await dbConn.sequelize.query("select number FROM dcm_phones WHERE dcm_contacts_id != ? AND number=?",{replacements:[loginUserContactId, req.body.mobile_number]})
-     let [isEmailExist, result2] = await dbConn.sequelize.query("select email_address FROM dcm_emails WHERE dcm_contacts_id != ? AND email_address=? ",{replacements:[loginUserContactId , req.body.email_address] })
-     let emailContactErrObj = {};
-     let errEmailConatct = false
- 
-     if (isEmailExist.length != 0) {
-         emailContactErrObj.email_address = "Email already taken "; errEmailConatct = true
-     }
-     if (isContactExist.length != 0) {
-         emailContactErrObj.mobile_number = "Mobile number already taken"; errEmailConatct = true
-     }
-     if (errEmailConatct == true) {
-       commonResObj(res, 409, { error: emailContactErrObj })
-     }
-     else {
-     //========================================> TO BE UPDATE IN dcm_contacts
-           let tempRegContactsObj = {
+    // CHECKING MOBILE NUMBER AND EMAAIL ADDRESS 
+    let loginUserContactId = req.body.loginUserContactId
+    let [isContactExist, result1] = await dbConn.sequelize.query("select number FROM dcm_phones WHERE dcm_contacts_id != ? AND number=?", { replacements: [loginUserContactId, req.body.mobile_number] })
+    let [isEmailExist, result2] = await dbConn.sequelize.query("select email_address FROM dcm_emails WHERE dcm_contacts_id != ? AND email_address=? ", { replacements: [loginUserContactId, req.body.email_address] })
+    let emailContactErrObj = {};
+    let errEmailConatct = false
 
-                  first_name: req.body.full_name.split(' ')[0],
-                  middle_name: req.body.full_name.split(' ').length > 3 ? req.body.full_name.split(' ')[1] : '',
-                  last_name: req.body.full_name.split(' ').length > 3 ? req.body.full_name.split(' ')[2] : req.body.full_name.split(' ')[1],
-                  gender: (req.body.gender) ? req.body.gender : '',
-                  date_of_birth: (req.body.date_of_birth) ? moment(req.body.date_of_birth).format('YYYY-MM-DD HH:MM:SS') : '',
-            
-             //   created_at: date_create,
-             //   dcm_organization_id: req.body.organization_Id,
-             //   dcm_hierarchies_id: req.body.hierarchies_id,
-             //   created_by: req.body.created_by,
-             //   id_extern01: req.body.mobile_number,
-             //   designation: 'Not Mentioned',
-             //   is_approved: (req.body.is_verified == null) ? '0' : req.body.is_verified,
-             //   approved_by: (req.body.verified_by == null) ? '0' : req.body.verified_by,
-             //   approved_at: (req.body.verified_by == null) ? '0' : req.body.verified_at,
-             //   dcm_languages_id: (req.body.dcm_languages_id == null) ? '1' : req.body.dcm_languages_id,
-             //   can_redeem: (req.body.can_redeem == null) ? 1 : req.body.can_redeem,
-             //   enrollment_date: moment(date_create).format('YYYY-MM-DD'), // yyyy-mm-dd
-             //   is_deleted: '0',
+    if (isEmailExist.length != 0) {
+      emailContactErrObj.email_address = "Email already taken "; errEmailConatct = true
+    }
+    if (isContactExist.length != 0) {
+      emailContactErrObj.mobile_number = "Mobile number already taken"; errEmailConatct = true
+    }
+    if (errEmailConatct == true) {
+      commonResObj(res, 409, { error: emailContactErrObj })
+    }
+    else {
+      //========================================> TO BE UPDATE IN dcm_contacts
+      let tempRegContactsObj = {
 
- 
-           };
- 
-           await tempContactRegistration.update(tempRegContactsObj, { where: { "id": loginUserContactId } })
-         // ========================  TO BE UPDATED IN dcm_groupMembersInfo
-          let groupMembrsObj = {
-            dcm_group_members_id: '',
-            value: req.body.identity_number,
-          }
-          if (req.body.identity_number_type == 'aadharcard') {
-            groupMembrsObj.dcm_group_members_id = groupMembersIds.dcm_groupMembers_aadhar_id
-          } else if (req.body.identity_number_type == 'voterId') {
-            groupMembrsObj.dcm_group_members_id = groupMembersIds.dcm_groupMembers_voterId_id
-          } else if (req.body.identity_number_type == 'driving_license') {
-            groupMembrsObj.dcm_group_members_id = groupMembersIds.dcm_groupMembers_drivinglicense_id
-          }
+        first_name: req.body.full_name.split(' ')[0],
+        middle_name: req.body.full_name.split(' ').length > 3 ? req.body.full_name.split(' ')[1] : '',
+        last_name: req.body.full_name.split(' ').length > 3 ? req.body.full_name.split(' ')[2] : req.body.full_name.split(' ')[1],
+        gender: (req.body.gender) ? req.body.gender : '',
+        date_of_birth: (req.body.date_of_birth) ? moment(req.body.date_of_birth).format('YYYY-MM-DD HH:MM:SS') : '',
 
-          console.log(groupMembrsObj ,"groupMembrsObj")
-          let groupMembrsObj_Res = await dcm_groupMembersInfo.update(groupMembrsObj,{where:{dcm_contacts_id : loginUserContactId, dcm_group_members_id:groupMembrsObj.dcm_group_members_id}});
-          if (req.body.GSTN != '') {
-            groupMembrsObj.dcm_group_members_id = groupMembersIds.dcm_groupMembers_GSTN_id
-            groupMembrsObj.value = req.body.GSTN
-            let groupMembrsObj_Res = await dcm_groupMembersInfo.update(groupMembrsObj,{where:{dcm_contacts_id : loginUserContactId, dcm_group_members_id:groupMembrsObj.dcm_group_members_id}});
-          }
-          //  PHONE UPDATE
-          let phoneObj={number:req.body.mobile_number}
-          await tempPhoneRegistration.update(phoneObj,{where:{dcm_contacts_id : loginUserContactId}});
-          // EMIAL UPDATE
-          let emailObj={email_address:req.body.email_address}
-          await tempEmailRegistration.update(emailObj,{where:{dcm_contacts_id : loginUserContactId}});
-          // Marital UPDATE  IN dcm_param_values
-          let mritlObj={value : req.body.marital_status}
-          await paramsValue.update(mritlObj,{where:{dcm_contacts_id : loginUserContactId , dcm_param_master_id : paramsMasterIds.Adani_AdaniLoyalty_marital_paramId}});
+        //   created_at: date_create,
+        //   dcm_organization_id: req.body.organization_Id,
+        //   dcm_hierarchies_id: req.body.hierarchies_id,
+        //   created_by: req.body.created_by,
+        //   id_extern01: req.body.mobile_number,
+        //   designation: 'Not Mentioned',
+        //   is_approved: (req.body.is_verified == null) ? '0' : req.body.is_verified,
+        //   approved_by: (req.body.verified_by == null) ? '0' : req.body.verified_by,
+        //   approved_at: (req.body.verified_by == null) ? '0' : req.body.verified_at,
+        //   dcm_languages_id: (req.body.dcm_languages_id == null) ? '1' : req.body.dcm_languages_id,
+        //   can_redeem: (req.body.can_redeem == null) ? 1 : req.body.can_redeem,
+        //   enrollment_date: moment(date_create).format('YYYY-MM-DD'), // yyyy-mm-dd
+        //   is_deleted: '0',
+
+
+      };
+
+      await tempContactRegistration.update(tempRegContactsObj, { where: { "id": loginUserContactId } })
+      // ========================  TO BE UPDATED IN dcm_groupMembersInfo
+      let groupMembrsObj = {
+        dcm_group_members_id: '',
+        value: req.body.identity_number,
+      }
+      if (req.body.identity_number_type == 'aadharcard') {
+        groupMembrsObj.dcm_group_members_id = groupMembersIds.dcm_groupMembers_aadhar_id
+      } else if (req.body.identity_number_type == 'voterId') {
+        groupMembrsObj.dcm_group_members_id = groupMembersIds.dcm_groupMembers_voterId_id
+      } else if (req.body.identity_number_type == 'driving_license') {
+        groupMembrsObj.dcm_group_members_id = groupMembersIds.dcm_groupMembers_drivinglicense_id
+      }
+
+      console.log(groupMembrsObj, "groupMembrsObj")
+      let groupMembrsObj_Res = await dcm_groupMembersInfo.update(groupMembrsObj, { where: { dcm_contacts_id: loginUserContactId, dcm_group_members_id: groupMembrsObj.dcm_group_members_id } });
+      if (req.body.GSTN != '') {
+        groupMembrsObj.dcm_group_members_id = groupMembersIds.dcm_groupMembers_GSTN_id
+        groupMembrsObj.value = req.body.GSTN
+        let groupMembrsObj_Res = await dcm_groupMembersInfo.update(groupMembrsObj, { where: { dcm_contacts_id: loginUserContactId, dcm_group_members_id: groupMembrsObj.dcm_group_members_id } });
+      }
+      //  PHONE UPDATE
+      let phoneObj = { number: req.body.mobile_number }
+      await tempPhoneRegistration.update(phoneObj, { where: { dcm_contacts_id: loginUserContactId } });
+      // EMIAL UPDATE
+      let emailObj = { email_address: req.body.email_address }
+      await tempEmailRegistration.update(emailObj, { where: { dcm_contacts_id: loginUserContactId } });
+      // Marital UPDATE  IN dcm_param_values
+      let mritlObj = { value: req.body.marital_status }
+      await paramsValue.update(mritlObj, { where: { dcm_contacts_id: loginUserContactId, dcm_param_master_id: paramsMasterIds.Adani_AdaniLoyalty_marital_paramId } });
 
       commonResObj(res, 200, { message: 'Profile updated successfully' });
-     }
+    }
 
-  }catch(error){
+  } catch (error) {
     console.log(error)
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.updateUserProfile", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error })
@@ -392,10 +396,10 @@ registrationController.tempRegistration = async (req, res) => {
     let errEmailConatct = false
 
     if (isEmailExist != null) {
-       emailContactErrObj.email_address = "Email already taken "; errEmailConatct = true
+      emailContactErrObj.email_address = "Email already taken "; errEmailConatct = true
     }
     if (isContactExist != null) {
-       emailContactErrObj.mobile_number = "Mobile number already taken"; errEmailConatct = true
+      emailContactErrObj.mobile_number = "Mobile number already taken"; errEmailConatct = true
     }
     if (errEmailConatct == true) {
       commonResObj(res, 409, { error: emailContactErrObj })
@@ -630,10 +634,10 @@ registrationController.basicProfileRegistration = async (req, res) => {
       let no_activeSites = await paramsOperations(org_id, contact_id, "Active Sites", valueName);
       let contractDetails = await ambContactTagMap.findOne({ where: { "dcm_contact_id": contact_id } });
       let tagsId;
-      if(contractDetails) {
+      if (contractDetails) {
         tagsId = contractDetails.amb_tags_id;
       } else {
-        tagsId=null;
+        tagsId = null;
       }
       let responseObj = {};
       let hierarchyDealerDetails = await dcm_hierarchies.findOne({ where: { "name": "Dealer", "dcm_organization_id": org_id } });
