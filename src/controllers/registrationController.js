@@ -1062,6 +1062,7 @@ registrationController.login = async (req, res, next) => {
       }
     })(req, res, next);
   } catch (error) {
+    console.log(error)
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.loginUser", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error });
   }
