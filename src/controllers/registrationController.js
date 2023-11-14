@@ -3,7 +3,7 @@ const commonResObj = require('../../middleWares/responses/commonResponse')
 const paramsMasterIds = require('../../config/dcm_paramsMasterIds')
 const groupMembersIds = require('../../config/dcm_groupMemberIds')
 ////////////_____________
-
+const { Op } = require("sequelize");
 var md5 = require('js-md5');
 
 const dbConn = require('../../config/db.config')
@@ -17,7 +17,7 @@ const crypto = require('crypto')
 const { basicProfile, tempContactRegistration, tempPhoneRegistration, tempEmailRegistration,
   parentChildMapping, organization, paramsMaster, paramsValue, companies, ambContactTagMap, userFile,
   dcm_groups, dcm_groupMembers, dcm_groupMembersInfo, dcm_hierarchies, dcm_salesData, ambPanDeclarationLog,
-  sf_guard_user, dcm_contactCompanies, dcm_zones, dcm_zoneContactMap
+  sf_guard_user, dcm_contactCompanies, dcm_zones, dcm_zoneContactMap,dcm_OneTimePass
 
 } = require('../../config/db.config')
 
@@ -49,8 +49,10 @@ const registrationController = {
   getListOfTSOByBranch: {},
   assignUsersTso: {},
 
-  getUserProfile: {},
-  updateUserProfile: {},
+  getUserProfile:{},
+  updateUserProfile:{},
+  verifyContact:{},
+  changePassword:{},
 
   logout: {}
 }
@@ -161,7 +163,7 @@ function getHirarchyIdsOf(hirarchyIdsOf) {
 
 function generatePasswordString() {
   let pass = '';
-  // let str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' + 'abcdefghijklmnopqrstuvwxyz' + '0123456789 ' + '!@#_';
+   let str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' + 'abcdefghijklmnopqrstuvwxyz' + '0123456789 ' + '!@#_';
   for (let i = 1; i <= 8; i++) {
     let char = Math.floor(Math.random()
       * str.length + 1);
@@ -193,6 +195,85 @@ async function add_contractor_to_branch(parent_id, contractor_id) { //  parent_i
 function generateEmailVefificationCode(email) {
   return crypto.createHash('md5').update(email).digest("hex")
 }
+function conv_time(timezone, my_date = false) {
+  if (my_date == false) {
+      var date = new Date();
+  } else {
+      var date = new Date(my_date);
+  }
+  let calsign = timezone.charAt(0);
+  var caltime = timezone.substring(1);
+  let mytime = caltime.split(":");
+  var cals = (mytime[0]* 60 + parseInt(mytime[1])) * 60000;
+  if (calsign == "-") {
+      var convertedUTC_date = new Date(date.getTime() - cals);
+  } else {
+      var convertedUTC_date = new Date(date.getTime() + parseInt(cals));
+  }
+  return convertedUTC_date;
+}
+
+
+registrationController.changePassword = async( req, res) =>{
+  try{
+    let ttime = conv_time("+05:30" ,new Date() )
+    let todayTime = new Date(ttime).getTime()
+    let isOTPExist = await dcm_OneTimePass.findOne(
+      {
+         where:{
+          [Op.and]:[{otp: req.body.otp},{dcm_contact_id:req.body.contact_id}],
+         }
+        // { otp: req.body.otp, dcm_contact_id:req.body.contact_id }
+      }
+    );
+
+    //console.log(isOTPExist.dataValues.created_at , "isOTPExist")
+    let OTP_createdAt = new Date(isOTPExist.dataValues.created_at).getTime()
+    let OTP_validUpTo = new Date(isOTPExist.dataValues.valid_up_to).getTime()
+    if(isOTPExist == null || isOTPExist == '' || isOTPExist == undefined){
+      commonResObj(res, 200, { message: 'Invalid OTP' ,   });  
+    }else{
+      if(todayTime > OTP_createdAt && todayTime <OTP_validUpTo){
+        let password = req.body.password;
+        console.log("passwordpassword" , password)
+      //  commonResObj(res, 200, { message: ' OTP verified' ,   });  
+      }else{
+        commonResObj(res, 200, { message: `OTP expired `  });  
+      }
+    }
+  }catch(error){
+    console.log(error)
+    logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.verifyContact", error: error, Api: regServiceUrl + req.url, status: 500 } });
+    commonResObj(res, 500, { error: error })
+  }
+}
+
+registrationController.verifyContact = async( req, res) =>{
+  try{
+    let isMobileExist = await tempPhoneRegistration.findOne({ where: { number: req.body.mobile_number, dcm_contacts_id:req.body.contact_id } });
+    if(isMobileExist == null || isMobileExist == '' || isMobileExist == undefined){
+      commonResObj(res, 200, { message: 'Mobile number not exist' ,   });  
+    }else{
+      console.log("OTP FOR CHANGE PASSWORD : ",Math.floor(100000 + Math.random() * 900000));
+      let date = new Date()
+      let dateTim = conv_time("+05:30" ,date )
+      let obj={
+        otp:Math.floor(100000 + Math.random() * 900000),
+        dcm_contact_id  : req.body.contact_id,
+        created_at      : dateTim,
+        valid_up_to     : new Date(dateTim.getTime() + 10*60000)
+      }
+      let dcm_OneTimePassRes = await dcm_OneTimePass.create(obj);
+      commonResObj(res, 200, { message: `6 digit OTP has sent to ${req.body.mobile_number}`  });  
+
+    }
+  }catch(error){
+    console.log(error)
+    logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.verifyContact", error: error, Api: regServiceUrl + req.url, status: 500 } });
+    commonResObj(res, 500, { error: error })
+  }
+}
+
 
 registrationController.assignUsersTso = async (req, res) => {
   try {
@@ -210,6 +291,10 @@ registrationController.assignUsersTso = async (req, res) => {
     commonResObj(res, 500, { error: error })
   }
 }
+
+
+
+
 registrationController.getUserProfile = async (req, res) => {
   try {
     let loginUserContactId = req.body.loginUserContactId
@@ -573,6 +658,7 @@ registrationController.tempRegistration = async (req, res) => {
 
     }
   } catch (error) {
+    console.log(error)
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController._tempRegistartion", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error })
   }

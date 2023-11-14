@@ -30,6 +30,8 @@ router.post('/assign/tso' ,regValidtn._assignUsersTso,registrationController.ass
 
 router.post('/user/profile' ,regValidtn._getUserProfile,registrationController.getUserProfile)
 router.put('/update/user/profile',registrationController.updateUserProfile)
+router.post('/verify/contact/number' , registrationController.verifyContact)
+router.post('/change/password' , registrationController.changePassword)
 
 
 // router.post('/basic/profile', registrationController.basicProfileRegistration);

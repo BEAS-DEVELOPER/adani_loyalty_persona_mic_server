@@ -88,6 +88,7 @@ db.dcm_zoneContactMap = require('../src/models/dcm_zoneContactMap')(sequelize, D
 db.countries = require('../src/models/cog_countries')(sequelize, DataTypes)
 db.states = require('../src/models/cog_states')(sequelize, DataTypes)
 db.cities = require('../src/models/cog_cities')(sequelize, DataTypes)
+db.dcm_OneTimePass = require('../src/models/dcm_oneTimePasswordModel')(sequelize, DataTypes)
 
 
 db.dcm_hierarchies.hasMany(db.organization, { foreignKey: "id" })
