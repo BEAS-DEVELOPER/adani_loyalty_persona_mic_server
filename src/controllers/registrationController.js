@@ -186,7 +186,7 @@ async function add_contractor_to_branch(parent_id, contractor_id) { //  parent_i
       })
     })
     if (array_push.length > 0) {
-      const bulkCreated = await ambContactTagMap.bulkCreate(array_push);
+        const bulkCreated = await ambContactTagMap.bulkCreate(array_push);
     }
   }
   return array_push;
@@ -216,27 +216,40 @@ function conv_time(timezone, my_date = false) {
 
 registrationController.changePassword = async( req, res) =>{
   try{
+    
     let ttime = conv_time("+05:30" ,new Date() )
     let todayTime = new Date(ttime).getTime()
+
     let isOTPExist = await dcm_OneTimePass.findOne(
-      {
-         where:{
-          [Op.and]:[{otp: req.body.otp},{dcm_contact_id:req.body.contact_id}],
-         }
-        // { otp: req.body.otp, dcm_contact_id:req.body.contact_id }
-      }
+      {  where: { [Op.and]:[{otp: req.body.otp},{dcm_contact_id:req.body.contact_id}], } }
     );
 
-    //console.log(isOTPExist.dataValues.created_at , "isOTPExist")
-    let OTP_createdAt = new Date(isOTPExist.dataValues.created_at).getTime()
-    let OTP_validUpTo = new Date(isOTPExist.dataValues.valid_up_to).getTime()
+   
+
     if(isOTPExist == null || isOTPExist == '' || isOTPExist == undefined){
       commonResObj(res, 200, { message: 'Invalid OTP' ,   });  
     }else{
+      let OTP_createdAt = new Date(isOTPExist.dataValues.created_at).getTime()
+      let OTP_validUpTo = new Date(isOTPExist.dataValues.valid_up_to).getTime()
       if(todayTime > OTP_createdAt && todayTime <OTP_validUpTo){
+
         let password = req.body.password;
-        console.log("passwordpassword" , password)
-      //  commonResObj(res, 200, { message: ' OTP verified' ,   });  
+        let passReg =  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/; 
+  
+       if( passReg.test(password)){
+        console.log("New Password : " , password)
+        let  saltRounds = 10
+        bcrypt.hash(password, saltRounds).then( async hashPassword => {
+            let passObj = { 'password': hashPassword  }
+            let inserTedPassword = await sf_guard_user.update(passObj,{where:{"dcm_contacts_id" : req.body.contact_id}});
+            commonResObj(res, 200, { message: ' Password changed successfully ' ,   });  
+
+        }).catch(err => {console.log(err), commonResObj(res, 500, { error: err })})
+
+       }else{
+           commonResObj(res, 200, { message: ' Password must be 8 characters atlest containing one uppercase , one special character ,one numeric  ' ,   });  
+       }
+
       }else{
         commonResObj(res, 200, { message: `OTP expired `  });  
       }
@@ -254,14 +267,15 @@ registrationController.verifyContact = async( req, res) =>{
     if(isMobileExist == null || isMobileExist == '' || isMobileExist == undefined){
       commonResObj(res, 200, { message: 'Mobile number not exist' ,   });  
     }else{
-      console.log("OTP FOR CHANGE PASSWORD : ",Math.floor(100000 + Math.random() * 900000));
+      let OTP = Math.floor(100000 + Math.random() * 900000);
+      console.log("_______OTP FOR CHANGE PASSWORD: ", OTP)
       let date = new Date()
       let dateTim = conv_time("+05:30" ,date )
       let obj={
-        otp:Math.floor(100000 + Math.random() * 900000),
+        otp:OTP,
         dcm_contact_id  : req.body.contact_id,
         created_at      : dateTim,
-        valid_up_to     : new Date(dateTim.getTime() + 10*60000)
+        valid_up_to     : new Date(dateTim.getTime() + 30*60000)
       }
       let dcm_OneTimePassRes = await dcm_OneTimePass.create(obj);
       commonResObj(res, 200, { message: `6 digit OTP has sent to ${req.body.mobile_number}`  });  
@@ -520,28 +534,32 @@ registrationController.tempRegistration = async (req, res) => {
 
       //=============================>   MATCHING COMING HIRARCHYIES ID IN PAYLOAD WITH SYSEM HYRARCHIRES ID
 
-      if (islogin && matchingHirarachiesIddWith(req.body.hierarchies_id, 'TSO')) {
+      // NOT REQUIRED ACCORDING ADANI BRD
 
-        tempRegContactsObj.created_by = req.body.created_by
-        tempRegContactsObj.is_approved = '1'
-        tempRegContactsObj.approved_at = moment(date_create).format('YYYY-MM-DD HH:MM:SS')
-        tempRegContactsObj.can_redeem = '0'
-        tempRegContactsObj.approved_by = req.body.created_by
+      // if (islogin && matchingHirarachiesIddWith(req.body.hierarchies_id, 'TSO')) {
+
+      //   tempRegContactsObj.created_by = req.body.created_by
+      //   tempRegContactsObj.is_approved = '1'
+      //   tempRegContactsObj.approved_at = moment(date_create).format('YYYY-MM-DD HH:MM:SS')
+      //   tempRegContactsObj.can_redeem = '0'
+      //   tempRegContactsObj.approved_by = req.body.created_by
 
 
-      } else if (islogin && matchingHirarachiesIddWith(req.body.hierarchies_id, 'Dealer')) {
+      // } else if (islogin && matchingHirarachiesIddWith(req.body.hierarchies_id, 'Dealer')) {
 
-        tempRegContactsObj.created_by = req.body.created_by
-        tempRegContactsObj.is_approved = '0'
-        tempRegContactsObj.approved_at = moment(date_create).format('YYYY-MM-DD HH:MM:SS')
-        tempRegContactsObj.can_redeem = '0'
+      //   tempRegContactsObj.created_by = req.body.created_by
+      //   tempRegContactsObj.is_approved = '0'
+      //   tempRegContactsObj.approved_at = moment(date_create).format('YYYY-MM-DD HH:MM:SS')
+      //   tempRegContactsObj.can_redeem = '0'
 
-        // $modified_datacontact['approved_by'] = $this->input->post('tso_id');
-        // tempRegContactsObj.approved_by = getHirarchyIdsOf('TSO') ################################   WILL UPDATED LATER ON BY DEEP
+      //   // $modified_datacontact['approved_by'] = $this->input->post('tso_id');
+      //   // tempRegContactsObj.approved_by = getHirarchyIdsOf('TSO') ################################   WILL UPDATED LATER ON BY DEEP
 
-      } else {
-        tempRegContactsObj.is_approved = '0'
-      }
+      // } else {
+      //   tempRegContactsObj.is_approved = '0'
+      // }
+
+
       let responseObjContact = await tempContactRegistration.create(tempRegContactsObj);
 
       if (responseObjContact.id) { // contact_id
