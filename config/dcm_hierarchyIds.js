@@ -3,7 +3,7 @@ const hirarchyIds =[
 
     // ORGANIZATION_ID : 1 ACC
 
-    {  id : 1  , organizationId:1 , name : 'Contractor' , selfReg : true  ,   canRegBy   : [ { id:2, name:'TSO' }, { id:3, name:'Dealer' }]  },
+    {  id : 1  , organizationId:1 , name : 'Contractor' , selfReg : false  ,   canRegBy   : [ { id:2, name:'TSO' }, { id:3, name:'Dealer' }]  },
     {  id : 2  , organizationId:1 , name : 'TSO' ,        selfReg : false ,   canRegBy   : [ { id:2, name:'TSO' }, { id:3, name:'Dealer' }]  },
     {  id : 3  , organizationId:1 , name : 'Dealer' ,     selfReg : false ,   canRegBy   : [ { id:2, name:'TSO' }, { id:3, name:'Dealer' }]  },
     {  id : 4  , organizationId:1 , name : 'Interior Designers'   , selfReg : true  ,    canRegBy   : [ { id:2, name:'TSO' }, { id:3, name:'Dealer' }]  },
