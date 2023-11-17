@@ -99,11 +99,11 @@ masterController.findAllLanguages = async (req, res) => {
 
 masterController.createHierarchies = async (req, res) => {
     try {
-        const { name, org_id } = req.body;
+        const { name, org_id, enabled } = req.body;
         const date_create = new Date().toISOString();
         let hierObj = {
             name: name,
-            enabled: 1,
+            enabled: enabled,
             root_id: 0,
             lft: 0,
             rgt: 0,
@@ -125,7 +125,7 @@ masterController.createHierarchies = async (req, res) => {
 masterController.findAllHierarchies = async (req, res) => {
     try {
         let org_id = req.params.org_id;
-        let all_hierarchies = await dcm_hierarchies.findAll({ where: { "dcm_organization_id": org_id } });
+        let all_hierarchies = await dcm_hierarchies.findAll({ where: { "dcm_organization_id": org_id, "enabled": 1 } });
         commonResObj(res, 200, { hierarchiesDetails: all_hierarchies });
     } catch (error) {
         logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllHierarchies", error: error, Api: masterServiceUrl + req.url, status: 500 } });
