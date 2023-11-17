@@ -38,21 +38,19 @@ ApiErrors.checkBody = (req,res)=>{
 }
 
 ApiErrors.checkUserAccessForTemReg  = ( req , res )=>{
-    console.log("_________!!")
-
     if(req.body.createdby_hierarchies_id === ''){
         commonResObj(res,412,{validationErrors:{createdby_hierarchies_id:`please provide createdby_hierarchies_id`}})
     }else if(req.body.createdby_hierarchies_id  == 0 ){
 
         let isRoleExist = false;
         let canSelfReg = false
+        let hierarchyName=''
         hirarchyIds.forEach(role=>{
             if((role.id == req.body.hierarchies_id) && (req.body.hierarchies_id != '') ){
+                hierarchyName = role.name
                 isRoleExist =true
                 if(role.selfReg == true)
                 {
-                    
-                    console.log("_________!!", role.canRegBy)
                     canSelfReg = true
                 }
             }
@@ -61,10 +59,10 @@ ApiErrors.checkUserAccessForTemReg  = ( req , res )=>{
             return canSelfReg
         }else if((isRoleExist == true)  && (canSelfReg == false)){
             logger.log({ level: "info", message: { fileLocation: "Middlewares/"+filename+" ,ApiErrors.checkUserRole", method:req.method, validationErrors: `role ${req.body.role} is blocked , `, Api :registrationProfileNode_serviceUrl+req.url ,status:412} });
-            commonResObj(res,412,{validationErrors:{hierarchies_id:`Self registration for ${req.body.hierarchies_id} is blocked`}})
+            commonResObj(res,412,{validationErrors:{hierarchies_id:`Self registration for ${hierarchyName} is blocked`}})
          }else{
             logger.log({ level: "info", message: { fileLocation: "Middlewares/"+filename+" ,ApiErrors.checkUserRole", method:req.method, validationErrors: `role ${req.body.role} is not exist , `, Api :registrationProfileNode_serviceUrl+req.url ,status:412} });
-            commonResObj(res,412,{validationErrors:{hierarchies_id:`hierarchies_id ${req.body.hierarchies_id} is not exist ,`}})
+            commonResObj(res,412,{validationErrors:{hierarchies_id:`hierarchies_id  for${req.body.hierarchies_id} is not exist ,`}})
         }
 
     }else{
@@ -83,7 +81,13 @@ ApiErrors.checkUserAccessForTemReg  = ( req , res )=>{
         if(isAccessVerified){
             return isAccessVerified
         }else{
-            commonResObj(res,412,{validationErrors:{createdby_hierarchies_id:`${req.body.createdby_hierarchies_id} is disabled`}})
+            let createdBy_hierarchy_name=''
+            hirarchyIds.forEach(role=>{
+                if((role.id == req.body.createdby_hierarchies_id) && (req.body.createdby_hierarchies_id != '') ){
+                    createdBy_hierarchy_name = role.name
+                }
+            })
+            commonResObj(res,412,{validationErrors:{createdby_hierarchies_id:`${createdBy_hierarchy_name} is disabled`}})
         }
     }
    
