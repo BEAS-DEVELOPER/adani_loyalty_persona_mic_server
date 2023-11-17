@@ -267,11 +267,13 @@ masterController.findAllBranches = async (req, res) => {
             for (let i = 0; i < tag_ids.length; i++) {
                 let tag_id = tag_ids[i];
                 let branchDetails = await ambTags.findOne({ where: { "id": tag_id, "amb_tag_groups_id": 1 } });
-                let branchObj = {
-                    id: branchDetails.id,
-                    name: branchDetails.name
+                if(branchDetails) {
+                    let branchObj = {
+                        id: branchDetails.id,
+                        name: branchDetails.name
+                    }
+                    allBranches.push(branchObj);
                 }
-                allBranches.push(branchObj);
             }
         }
         commonResObj(res, 200, { branchDetails: allBranches });

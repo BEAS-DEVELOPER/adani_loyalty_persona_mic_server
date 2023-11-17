@@ -744,9 +744,10 @@ registrationController.basicProfileRegistration = async (req, res) => {
         tagsId = null;
       }
       let responseObj = {};
+      let contractorDealerDetails = await dcm_hierarchies.findOne({ where: { "name": "Contractor", "dcm_organization_id": org_id } });
       let hierarchyDealerDetails = await dcm_hierarchies.findOne({ where: { "name": "Dealer", "dcm_organization_id": org_id } });
       let hierarchyTSODetails = await dcm_hierarchies.findOne({ where: { "name": "TSO", "dcm_organization_id": org_id } });
-      if (hierarchyDealerDetails.id == contactDetails.created_by) {
+      if (hierarchyDealerDetails.id == contactDetails.dcm_hierarchies_id) {
         let mappingOfficer = tso_id;
         responseObj = {
           "mappingOfficer": mappingOfficer,
@@ -775,7 +776,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
           }
         }
         commonResObj(res, 200, { basicProfileDetails: responseObj });
-      } else if (hierarchyTSODetails.id == contactDetails.created_by) {
+      } else if (hierarchyTSODetails.id == contactDetails.dcm_hierarchies_id) {
         for (let i = 0; i < dealer_arr.length; i++) {
           await branchesContactsParent(dealer_arr[i], contact_id);
         }
@@ -801,7 +802,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
           "pinCode": profileObj.post_code
         };
         commonResObj(res, 200, { basicProfileDetails: responseObj });
-      } else if (contactDetails.dcm_hierarchies_id == 1) {
+      } else if (contactDetails.dcm_hierarchies_id == contractorDealerDetails.id) {
         if (district == '' || state == '') {
           commonResObj(res, 200, { "message": "State and city are both required" });
         } else {
