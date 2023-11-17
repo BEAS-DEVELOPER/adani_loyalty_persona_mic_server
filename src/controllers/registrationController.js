@@ -806,7 +806,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
         if (district == '' || state == '') {
           commonResObj(res, 200, { "message": "State and city are both required" });
         } else {
-          let tsoDetails = await tempContactRegistration.findOne({ where: { "id": tso_id, "dcm_hierarchies_id": 2 } });
+          let tsoDetails = await tempContactRegistration.findOne({ where: { "id": tso_id, "dcm_hierarchies_id": hierarchyTSODetails.id } });
           if (tsoDetails) {
             let contactObj = {
               approved_by: tso_id
