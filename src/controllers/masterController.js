@@ -233,11 +233,11 @@ masterController.findAllCities = async (req, res) => {
 
 masterController.createOrganizations = async (req, res) => {
     try {
-        const { name, description } = req.body;
+        const { name, description, is_active } = req.body;
         let orgObj = {
             name: name,
             description: description,
-            is_active: "1"
+            is_active: is_active
         }
         let org = await organization.create(orgObj);
         commonResObj(res, 200, { organizationDetails: org });
@@ -249,7 +249,7 @@ masterController.createOrganizations = async (req, res) => {
 
 masterController.findAllOrganizations = async (req, res) => {
     try {
-        let all_organization = await organization.findAll();
+        let all_organization = await organization.findAll({ where: { "is_active": "1" } });
         commonResObj(res, 200, { organizationDetails: all_organization });
     } catch (error) {
         logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllOrganizations", error: error, Api: masterServiceUrl + req.url, status: 500 } });
@@ -267,7 +267,7 @@ masterController.findAllBranches = async (req, res) => {
             for (let i = 0; i < tag_ids.length; i++) {
                 let tag_id = tag_ids[i];
                 let branchDetails = await ambTags.findOne({ where: { "id": tag_id, "amb_tag_groups_id": 1 } });
-                if(branchDetails) {
+                if (branchDetails) {
                     let branchObj = {
                         id: branchDetails.id,
                         name: branchDetails.name
