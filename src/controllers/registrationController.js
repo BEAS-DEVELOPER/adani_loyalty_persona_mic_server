@@ -17,7 +17,7 @@ const crypto = require('crypto')
 const { basicProfile, tempContactRegistration, tempPhoneRegistration, tempEmailRegistration,
   parentChildMapping, organization, paramsMaster, paramsValue, companies, ambContactTagMap, userFile,
   dcm_groups, dcm_groupMembers, dcm_groupMembersInfo, dcm_hierarchies, dcm_salesData, ambPanDeclarationLog,
-  sf_guard_user, dcm_contactCompanies, dcm_zones, dcm_zoneContactMap,dcm_OneTimePass
+  sf_guard_user, dcm_contactCompanies, dcm_zones, dcm_zoneContactMap, dcm_OneTimePass
 
 } = require('../../config/db.config')
 
@@ -49,10 +49,10 @@ const registrationController = {
   getListOfTSOByBranch: {},
   assignUsersTso: {},
 
-  getUserProfile:{},
-  updateUserProfile:{},
-  verifyContact:{},
-  changePassword:{},
+  getUserProfile: {},
+  updateUserProfile: {},
+  verifyContact: {},
+  changePassword: {},
 
   logout: {}
 }
@@ -163,7 +163,7 @@ function getHirarchyIdsOf(hirarchyIdsOf) {
 
 function generatePasswordString() {
   let pass = '';
-   let str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' + 'abcdefghijklmnopqrstuvwxyz' + '0123456789 ' + '!@#_';
+  let str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' + 'abcdefghijklmnopqrstuvwxyz' + '0123456789 ' + '!@#_';
   for (let i = 1; i <= 8; i++) {
     let char = Math.floor(Math.random()
       * str.length + 1);
@@ -186,7 +186,7 @@ async function add_contractor_to_branch(parent_id, contractor_id) { //  parent_i
       })
     })
     if (array_push.length > 0) {
-        const bulkCreated = await ambContactTagMap.bulkCreate(array_push);
+      const bulkCreated = await ambContactTagMap.bulkCreate(array_push);
     }
   }
   return array_push;
@@ -197,91 +197,91 @@ function generateEmailVefificationCode(email) {
 }
 function conv_time(timezone, my_date = false) {
   if (my_date == false) {
-      var date = new Date();
+    var date = new Date();
   } else {
-      var date = new Date(my_date);
+    var date = new Date(my_date);
   }
   let calsign = timezone.charAt(0);
   var caltime = timezone.substring(1);
   let mytime = caltime.split(":");
-  var cals = (mytime[0]* 60 + parseInt(mytime[1])) * 60000;
+  var cals = (mytime[0] * 60 + parseInt(mytime[1])) * 60000;
   if (calsign == "-") {
-      var convertedUTC_date = new Date(date.getTime() - cals);
+    var convertedUTC_date = new Date(date.getTime() - cals);
   } else {
-      var convertedUTC_date = new Date(date.getTime() + parseInt(cals));
+    var convertedUTC_date = new Date(date.getTime() + parseInt(cals));
   }
   return convertedUTC_date;
 }
 
 
-registrationController.changePassword = async( req, res) =>{
-  try{
-    
-    let ttime = conv_time("+05:30" ,new Date() )
+registrationController.changePassword = async (req, res) => {
+  try {
+
+    let ttime = conv_time("+05:30", new Date())
     let todayTime = new Date(ttime).getTime()
 
     let isOTPExist = await dcm_OneTimePass.findOne(
-      {  where: { [Op.and]:[{otp: req.body.otp},{dcm_contact_id:req.body.contact_id}], } }
+      { where: { [Op.and]: [{ otp: req.body.otp }, { dcm_contact_id: req.body.contact_id }], } }
     );
 
-   
 
-    if(isOTPExist == null || isOTPExist == '' || isOTPExist == undefined){
-      commonResObj(res, 200, { message: 'Invalid OTP' ,   });  
-    }else{
+
+    if (isOTPExist == null || isOTPExist == '' || isOTPExist == undefined) {
+      commonResObj(res, 200, { message: 'Invalid OTP', });
+    } else {
       let OTP_createdAt = new Date(isOTPExist.dataValues.created_at).getTime()
       let OTP_validUpTo = new Date(isOTPExist.dataValues.valid_up_to).getTime()
-      if(todayTime > OTP_createdAt && todayTime <OTP_validUpTo){
+      if (todayTime > OTP_createdAt && todayTime < OTP_validUpTo) {
 
         let password = req.body.password;
-        let passReg =  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/; 
-  
-       if( passReg.test(password)){
-        console.log("New Password : " , password)
-        let  saltRounds = 10
-        bcrypt.hash(password, saltRounds).then( async hashPassword => {
-            let passObj = { 'password': hashPassword  }
-            let inserTedPassword = await sf_guard_user.update(passObj,{where:{"dcm_contacts_id" : req.body.contact_id}});
-            commonResObj(res, 200, { message: ' Password changed successfully ' ,   });  
+        let passReg = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/;
 
-        }).catch(err => {console.log(err), commonResObj(res, 500, { error: err })})
+        if (passReg.test(password)) {
+          console.log("New Password : ", password)
+          let saltRounds = 10
+          bcrypt.hash(password, saltRounds).then(async hashPassword => {
+            let passObj = { 'password': hashPassword }
+            let inserTedPassword = await sf_guard_user.update(passObj, { where: { "dcm_contacts_id": req.body.contact_id } });
+            commonResObj(res, 200, { message: ' Password changed successfully ', });
 
-       }else{
-           commonResObj(res, 200, { message: ' Password must be 8 characters atlest containing one uppercase , one special character ,one numeric  ' ,   });  
-       }
+          }).catch(err => { console.log(err), commonResObj(res, 500, { error: err }) })
 
-      }else{
-        commonResObj(res, 200, { message: `OTP expired `  });  
+        } else {
+          commonResObj(res, 200, { message: ' Password must be 8 characters atlest containing one uppercase , one special character ,one numeric  ', });
+        }
+
+      } else {
+        commonResObj(res, 200, { message: `OTP expired ` });
       }
     }
-  }catch(error){
+  } catch (error) {
     console.log(error)
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.verifyContact", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error })
   }
 }
 
-registrationController.verifyContact = async( req, res) =>{
-  try{
-    let isMobileExist = await tempPhoneRegistration.findOne({ where: { number: req.body.mobile_number, dcm_contacts_id:req.body.contact_id } });
-    if(isMobileExist == null || isMobileExist == '' || isMobileExist == undefined){
-      commonResObj(res, 200, { message: 'Mobile number not exist' ,   });  
-    }else{
+registrationController.verifyContact = async (req, res) => {
+  try {
+    let isMobileExist = await tempPhoneRegistration.findOne({ where: { number: req.body.mobile_number, dcm_contacts_id: req.body.contact_id } });
+    if (isMobileExist == null || isMobileExist == '' || isMobileExist == undefined) {
+      commonResObj(res, 200, { message: 'Mobile number not exist', });
+    } else {
       let OTP = Math.floor(100000 + Math.random() * 900000);
       console.log("_______OTP FOR CHANGE PASSWORD: ", OTP)
       let date = new Date()
-      let dateTim = conv_time("+05:30" ,date )
-      let obj={
-        otp:OTP,
-        dcm_contact_id  : req.body.contact_id,
-        created_at      : dateTim,
-        valid_up_to     : new Date(dateTim.getTime() + 30*60000)
+      let dateTim = conv_time("+05:30", date)
+      let obj = {
+        otp: OTP,
+        dcm_contact_id: req.body.contact_id,
+        created_at: dateTim,
+        valid_up_to: new Date(dateTim.getTime() + 30 * 60000)
       }
       let dcm_OneTimePassRes = await dcm_OneTimePass.create(obj);
-      commonResObj(res, 200, { message: `6 digit OTP has sent to ${req.body.mobile_number}`  });  
+      commonResObj(res, 200, { message: `6 digit OTP has sent to ${req.body.mobile_number}` });
 
     }
-  }catch(error){
+  } catch (error) {
     console.log(error)
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.verifyContact", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error })
@@ -744,7 +744,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
         tagsId = null;
       }
       let responseObj = {};
-      let contractorDealerDetails = await dcm_hierarchies.findOne({ where: { "name": "Contractor", "dcm_organization_id": org_id } });
+      let contractorDetails = await dcm_hierarchies.findOne({ where: { "name": "Contractor", "dcm_organization_id": org_id } });
       let hierarchyDealerDetails = await dcm_hierarchies.findOne({ where: { "name": "Dealer", "dcm_organization_id": org_id } });
       let hierarchyTSODetails = await dcm_hierarchies.findOne({ where: { "name": "TSO", "dcm_organization_id": org_id } });
       if (hierarchyDealerDetails.id == contactDetails.dcm_hierarchies_id) {
@@ -802,11 +802,11 @@ registrationController.basicProfileRegistration = async (req, res) => {
           "pinCode": profileObj.post_code
         };
         commonResObj(res, 200, { basicProfileDetails: responseObj });
-      } else if (contactDetails.dcm_hierarchies_id == contractorDealerDetails.id) {
+      } else if (contactDetails.dcm_hierarchies_id == contractorDetails.id) {
         if (district == '' || state == '') {
           commonResObj(res, 200, { "message": "State and city are both required" });
         } else {
-          let tsoDetails = await tempContactRegistration.findOne({ where: { "id": tso_id } });
+          let tsoDetails = await tempContactRegistration.findOne({ where: { "id": tso_id, "dcm_hierarchies_id": 2 } });
           if (tsoDetails) {
             let contactObj = {
               approved_by: tso_id
