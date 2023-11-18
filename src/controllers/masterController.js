@@ -189,7 +189,8 @@ masterController.createStates = async (req, res) => {
 }
 masterController.findAllStates = async (req, res) => {
     try {
-        let all_states = await states.findAll();
+        let country_id = req.params.country_id;
+        let all_states = await states.findAll({ where: { "cog_countries_id": country_id } });
         commonResObj(res, 200, { statesDetails: all_states });
     } catch (error) {
         logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllStates", error: error, Api: masterServiceUrl + req.url, status: 500 } });
@@ -222,7 +223,9 @@ masterController.createCities = async (req, res) => {
 }
 masterController.findAllCities = async (req, res) => {
     try {
-        let all_cities = await cities.findAll();
+        let country_id = req.params.country_id;
+        let state_id = req.params.state_id;
+        let all_cities = await cities.findAll({ where: { "cog_countries_id": country_id, "cog_states_id": state_id } });
         commonResObj(res, 200, { citiesDetails: all_cities });
     } catch (error) {
         console.log(error)
