@@ -749,95 +749,100 @@ registrationController.basicProfileRegistration = async (req, res) => {
       let hierarchyTSODetails = await dcm_hierarchies.findOne({ where: { "name": "TSO", "dcm_organization_id": org_id } });
       let created_by = contactDetails.created_by;
       let createdByDetails = await tempContactRegistration.findOne({ where: { "id": created_by } });
-      if (hierarchyDealerDetails.id == createdByDetails.dcm_hierarchies_id) {
-        let mappingOfficer = tso_id;
-        responseObj = {
-          "mappingOfficer": mappingOfficer,
-          "contractorCategory": tagsId,
-          "noOfActiveSites": no_activeSites,
-          "addressLine1": profileObj.line1,
-          "postOffice": profileObj.line2,
-          "landmark": profileObj.line3,
-          "city": profileObj.city,
-          "state": profileObj.dcm_states_id,
-          "district": profileObj.dcm_cities_id,
-          "pinCode": profileObj.post_code
-        };
-        let contactObj = {
-          approved_by: tso_id
-        };
-        await tempContactRegistration.update(contactObj, { where: { "id": contact_id } });
-        await branchesContactsParent(contactDetails.createdBy, contact_id);
-        let allDealerBranches = await getAllDealersTags(contact_id);
-        if (allDealerBranches.length > 0) {
-          for (let j = 0; j < allDealerBranches.length; j++) {
-            let zoneDetails = await dcm_zones.findOne({ where: { "zone_name": allDealerBranches[j].name } })
-            if (zoneDetails) {
-              await create_zone_contact_mapping(allDealerBranches[j].name, contact_id);
+      if(createdByDetails) {
+        if (hierarchyDealerDetails.id == createdByDetails.dcm_hierarchies_id) {
+          let mappingOfficer = tso_id;
+          responseObj = {
+            "mappingOfficer": mappingOfficer,
+            "contractorCategory": tagsId,
+            "noOfActiveSites": no_activeSites,
+            "addressLine1": profileObj.line1,
+            "postOffice": profileObj.line2,
+            "landmark": profileObj.line3,
+            "city": profileObj.city,
+            "state": profileObj.dcm_states_id,
+            "district": profileObj.dcm_cities_id,
+            "pinCode": profileObj.post_code
+          };
+          let contactObj = {
+            approved_by: tso_id
+          };
+          await tempContactRegistration.update(contactObj, { where: { "id": contact_id } });
+          await branchesContactsParent(contactDetails.createdBy, contact_id);
+          let allDealerBranches = await getAllDealersTags(contact_id);
+          if (allDealerBranches.length > 0) {
+            for (let j = 0; j < allDealerBranches.length; j++) {
+              let zoneDetails = await dcm_zones.findOne({ where: { "zone_name": allDealerBranches[j].name } })
+              if (zoneDetails) {
+                await create_zone_contact_mapping(allDealerBranches[j].name, contact_id);
+              }
             }
           }
-        }
-        commonResObj(res, 200, { basicProfileDetails: responseObj });
-      } else if (hierarchyTSODetails.id == createdByDetails.dcm_hierarchies_id) {
-        for (let i = 0; i < dealer_arr.length; i++) {
-          await branchesContactsParent(dealer_arr[i], contact_id);
-        }
-        let allDealerBranches = await getAllDealersTags(contact_id);
-        if (allDealerBranches.length > 0) {
-          for (let j = 0; j < allDealerBranches.length; j++) {
-            let zoneDetails = await dcm_zones.findOne({ where: { "zone_name": allDealerBranches[j].name } })
-            if (zoneDetails) {
-              await create_zone_contact_mapping(allDealerBranches[j].name, contact_id);
+          commonResObj(res, 200, { basicProfileDetails: responseObj });
+        } else if (hierarchyTSODetails.id == createdByDetails.dcm_hierarchies_id) {
+          for (let i = 0; i < dealer_arr.length; i++) {
+            await branchesContactsParent(dealer_arr[i], contact_id);
+          }
+          let allDealerBranches = await getAllDealersTags(contact_id);
+          if (allDealerBranches.length > 0) {
+            for (let j = 0; j < allDealerBranches.length; j++) {
+              let zoneDetails = await dcm_zones.findOne({ where: { "zone_name": allDealerBranches[j].name } })
+              if (zoneDetails) {
+                await create_zone_contact_mapping(allDealerBranches[j].name, contact_id);
+              }
             }
           }
-        }
-        responseObj = {
-          "chooseDealer": dealer_arr,
-          "contractorCategory": tagsId,
-          "noOfActiveSites": no_activeSites,
-          "addressLine1": profileObj.line1,
-          "postOffice": profileObj.line2,
-          "landmark": profileObj.line3,
-          "city": profileObj.city,
-          "state": profileObj.dcm_states_id,
-          "district": profileObj.dcm_cities_id,
-          "pinCode": profileObj.post_code
-        };
-        commonResObj(res, 200, { basicProfileDetails: responseObj });
-      } else if (contactDetails.dcm_hierarchies_id == contractorDetails.id) {
-        if (district == '' || state == '') {
-          commonResObj(res, 200, { "message": "State and city are both required" });
-        } else {
-          let tsoDetails = await tempContactRegistration.findOne({ where: { "id": tso_id, "dcm_hierarchies_id": hierarchyTSODetails.id } });
-          if (tsoDetails) {
-            let contactObj = {
-              approved_by: tso_id
-            };
-            await tempContactRegistration.update(contactObj, { where: { "id": contact_id } });
-            responseObj = {
-              "tso_id": tso_id,
-              "contractorCategory": tagsId,
-              "noOfActiveSites": no_activeSites,
-              "addressLine1": profileObj.line1,
-              "postOffice": profileObj.line2,
-              "landmark": profileObj.line3,
-              "city": profileObj.city,
-              "state": profileObj.dcm_states_id,
-              "district": profileObj.dcm_cities_id,
-              "pinCode": profileObj.post_code
-            };
-            commonResObj(res, 200, { basicProfileDetails: responseObj });
+          responseObj = {
+            "chooseDealer": dealer_arr,
+            "contractorCategory": tagsId,
+            "noOfActiveSites": no_activeSites,
+            "addressLine1": profileObj.line1,
+            "postOffice": profileObj.line2,
+            "landmark": profileObj.line3,
+            "city": profileObj.city,
+            "state": profileObj.dcm_states_id,
+            "district": profileObj.dcm_cities_id,
+            "pinCode": profileObj.post_code
+          };
+          commonResObj(res, 200, { basicProfileDetails: responseObj });
+        } else if (contactDetails.dcm_hierarchies_id == contractorDetails.id) {
+          if (district == '' || state == '') {
+            commonResObj(res, 200, { "message": "State and city are both required" });
           } else {
-            commonResObj(res, 200, { "message": "Please select TSO" });
+            let tsoDetails = await tempContactRegistration.findOne({ where: { "id": tso_id, "dcm_hierarchies_id": hierarchyTSODetails.id } });
+            if (tsoDetails) {
+              let contactObj = {
+                approved_by: tso_id
+              };
+              await tempContactRegistration.update(contactObj, { where: { "id": contact_id } });
+              responseObj = {
+                "tso_id": tso_id,
+                "contractorCategory": tagsId,
+                "noOfActiveSites": no_activeSites,
+                "addressLine1": profileObj.line1,
+                "postOffice": profileObj.line2,
+                "landmark": profileObj.line3,
+                "city": profileObj.city,
+                "state": profileObj.dcm_states_id,
+                "district": profileObj.dcm_cities_id,
+                "pinCode": profileObj.post_code
+              };
+              commonResObj(res, 200, { basicProfileDetails: responseObj });
+            } else {
+              commonResObj(res, 200, { "message": "Please select TSO" });
+            }
           }
+        } else {
+          commonResObj(res, 200, { basicProfileDetails: responseObj });
         }
       } else {
-        commonResObj(res, 200, { basicProfileDetails: responseObj });
+        commonResObj(res, 200, { "message": "User created by not found" });
       }
     } else {
       commonResObj(res, 200, { "message": "DCM Contacts not found" });
     }
   } catch (error) {
+    console.log(error)
     logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "registrationController.basicProfileRegistration", error: error, Api: regServiceUrl + req.url, status: 500 } });
     commonResObj(res, 500, { error: error })
   }
