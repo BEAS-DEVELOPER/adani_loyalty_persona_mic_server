@@ -768,7 +768,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
             approved_by: tso_id
           };
           await tempContactRegistration.update(contactObj, { where: { "id": contact_id } });
-          await branchesContactsParent(contactDetails.createdBy, contact_id);
+          await branchesContactsParent(contactDetails.created_by, contact_id);
           let allDealerBranches = await getAllDealersTags(contact_id);
           if (allDealerBranches.length > 0) {
             for (let j = 0; j < allDealerBranches.length; j++) {
