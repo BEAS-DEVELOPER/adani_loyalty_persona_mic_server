@@ -672,7 +672,7 @@ registrationController.tempRegistration = async (req, res) => {
       }
       let responseObjEmail = await tempEmailRegistration.create(tempRegEmailObj);
       // commonResObj(res, 200, { regContactData: responseObjContact, regPhoneData: responseObjPhone, regEmailData: responseObjEmail });
-      commonResObj(res, 200, { message: 'Temporary registration done successfully' });
+      commonResObj(res, 200, { message: 'Temporary registration done successfully', regContactData: responseObjContact, regPhoneData: responseObjPhone, regEmailData: responseObjEmail });
 
     }
   } catch (error) {
