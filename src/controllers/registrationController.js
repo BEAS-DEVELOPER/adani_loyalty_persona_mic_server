@@ -747,7 +747,9 @@ registrationController.basicProfileRegistration = async (req, res) => {
       let contractorDetails = await dcm_hierarchies.findOne({ where: { "name": "Contractor", "dcm_organization_id": org_id } });
       let hierarchyDealerDetails = await dcm_hierarchies.findOne({ where: { "name": "Dealer", "dcm_organization_id": org_id } });
       let hierarchyTSODetails = await dcm_hierarchies.findOne({ where: { "name": "TSO", "dcm_organization_id": org_id } });
-      if (hierarchyDealerDetails.id == contactDetails.dcm_hierarchies_id) {
+      let created_by = contactDetails.created_by;
+      let createdByDetails = await tempContactRegistration.findOne({ where: { "id": created_by } });
+      if (hierarchyDealerDetails.id == createdByDetails.dcm_hierarchies_id) {
         let mappingOfficer = tso_id;
         responseObj = {
           "mappingOfficer": mappingOfficer,
@@ -776,7 +778,7 @@ registrationController.basicProfileRegistration = async (req, res) => {
           }
         }
         commonResObj(res, 200, { basicProfileDetails: responseObj });
-      } else if (hierarchyTSODetails.id == contactDetails.dcm_hierarchies_id) {
+      } else if (hierarchyTSODetails.id == createdByDetails.dcm_hierarchies_id) {
         for (let i = 0; i < dealer_arr.length; i++) {
           await branchesContactsParent(dealer_arr[i], contact_id);
         }
