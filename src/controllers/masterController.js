@@ -318,7 +318,7 @@ masterController.findAllTSOBranches = async (req, res) => {
         }
         commonResObj(res, 200, { TSODetails: allTSOs });
     } catch (error) {
-        logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllTSOs", error: error, Api: masterServiceUrl + req.url, status: 500 } });
+        logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllTSOBranches", error: error, Api: masterServiceUrl + req.url, status: 500 } });
         commonResObj(res, 500, { error: error })
     }
 }
@@ -361,7 +361,7 @@ masterController.findAllDealers = async (req, res) => {
         }
         commonResObj(res, 200, { dealerDetails: allDealers });
     } catch (error) {
-        logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllTSOs", error: error, Api: masterServiceUrl + req.url, status: 500 } });
+        logger.log({ level: "error", message: { file: "src/controllers/" + filename, method: "masterController.findAllDealers", error: error, Api: masterServiceUrl + req.url, status: 500 } });
         commonResObj(res, 500, { error: error })
     }
 }
