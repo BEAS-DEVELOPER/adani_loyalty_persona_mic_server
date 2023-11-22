@@ -36,6 +36,10 @@ app.use("/server", (req, res) => {
     res.end("<h1 style='text-align:center;color:white;background-color:red'>Welcome to  backend registrationProfileNode_9001 server </h1>")
 })
 
+app.use('/api/v1/registrationProfileNode/images/pan', express.static('uploads/verificationImages/pan'));
+app.use('/api/v1/registrationProfileNode/images/aadhar/DL/voter/back', express.static('uploads/verificationImages/aadharDLVoter/back'));
+app.use('/api/v1/registrationProfileNode/images/aadhar/DL/voter/front', express.static('uploads/verificationImages/aadharDLVoter/front'));
+
 // registrationProfileNode ROUTES  EXECUTIONS 
  //   REGISTRATION  ROUTER
 app.use(loginAuthNode_baseUrl, authnRoute);
